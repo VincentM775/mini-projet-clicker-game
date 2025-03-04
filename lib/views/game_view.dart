@@ -1,45 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:untitled1/views/home_view.dart';
-import '../viewmodels/game_view_model.dart';
-// import '../widgets/map_button.dart';
 
-class GameView extends StatelessWidget {
+class GameView extends StatefulWidget {
   const GameView({super.key});
 
-  void _backMenu(BuildContext context) {
-    // final gameViewModel = context.read<GameViewModel>();
-    // gameViewModel.setGame(user);
-    // gameViewModel.generateMap();// Configure la partie
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeView()),
+  @override
+  _GameViewState createState() => _GameViewState();
+}
+
+class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin {
+  int _counter = 0; // Compteur
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100), // Durée de l'effet
+      lowerBound: 0.9, // Réduction à 90% de la taille
+      upperBound: 1.0, // Retour à la taille normale
     );
+
+    _scaleAnimation = _controller.drive(CurveTween(curve: Curves.easeOut));
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+
+    // Démarre l'animation d'attaque
+    _controller.forward(from: 0.9);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // final gameViewModel = context.watch<GameViewModel>();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Clicker Game',
-          style: const TextStyle(fontSize: 18),
+          style: TextStyle(fontSize: 18, color: Colors.white),
         ),
+        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              _backMenu(context);
-            },
+      ),
+      body: Row(
+        children: [
+          // Partie gauche (fond beige)
+          Expanded(
+            flex: 1, // 50% de l'écran
+            child: Container(
+              color: Colors.brown, // Fond beige
+            ),
+          ),
+          // Partie droite (Image cliquable + compteur)
+          Expanded(
+            flex: 1, // 50% de l'écran
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Compteur
+                Text(
+                  '$_counter',
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                // Image cliquable avec effet d'attaque
+                GestureDetector(
+                  onTap: _incrementCounter,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Image.asset(
+                      'assets/images/1.webp', // Remplace avec ton image
+                      width: 150,
+                      height: 150,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      body: Text("Helloo, tu es sur la deuxième page")
     );
   }
-
 }

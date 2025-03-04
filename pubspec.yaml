@@ -61,6 +61,7 @@ flutter:
   uses-material-design: true
   assets:
     - lib/core/config/.env # path to your .env
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
