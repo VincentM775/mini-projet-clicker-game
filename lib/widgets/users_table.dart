@@ -15,15 +15,16 @@ class UsersTable extends StatelessWidget {
     required this.onDelete,
   });
 
-  void _startGame(BuildContext context, int user) {
-    // final gameViewModel = context.read<GameViewModel>();
-    // gameViewModel.setGame(user);
-    // gameViewModel.generateMap();// Configure la partie
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const GameView()),
-    );
-  }
+  void _startGame(BuildContext context, int userId) {
+  // Passer l'id de l'utilisateur au GameView
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => GameView(userId: userId), // Passe l'ID ici
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {

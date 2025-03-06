@@ -1,10 +1,9 @@
-import 'package:intl/intl.dart';
-
 class UserModel {
   final int id;
   final String pseudo;
-  final int total_experience;
+  late final int total_experience;
   final int id_ennemy;
+  final int nbr_mort_dern_ennemi;
 
   // Constructeur classique
   UserModel({
@@ -12,6 +11,7 @@ class UserModel {
     required this.pseudo,
     required this.total_experience,
     required this.id_ennemy,
+    required this.nbr_mort_dern_ennemi
   });
 
   /*
@@ -23,10 +23,11 @@ class UserModel {
    */
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id_player'] ?? 0,
+      id: json['id_player'] ?? 1,
       pseudo: json['pseudo'] ?? 'Nom inconnu',
       total_experience: json['total_experience'] ?? 0,
-      id_ennemy: json['id_ennemy'] ?? 0,
+      id_ennemy: json['id_ennemy'] ?? 1,
+      nbr_mort_dern_ennemi: json['nbr_mort_dern_ennemi'] ?? 0
     );
   }
 

@@ -21,7 +21,8 @@ class UserRequest {
   */
   Future<UserModel?> getUserById(int id) async {
     Map<String, String> queryParams = {"id_player": id.toString()};
-    List<dynamic> data = await apiService.getRequest("get_users.php", queryParams: queryParams);
+    List<dynamic> data =
+        await apiService.getRequest("get_users.php", queryParams: queryParams);
     if (data.isNotEmpty) {
       return UserModel.fromJson(data.first);
     }
@@ -33,7 +34,8 @@ class UserRequest {
   */
   Future<List<UserModel>> getUserByLastname(String pseudo) async {
     Map<String, String> queryParams = {"pseudo": Uri.encodeComponent(pseudo)};
-    List<dynamic> data = await apiService.getRequest("get_users.php", queryParams: queryParams);
+    List<dynamic> data =
+        await apiService.getRequest("get_users.php", queryParams: queryParams);
     return data.map((user) => UserModel.fromJson(user)).toList();
   }
 
@@ -44,7 +46,8 @@ class UserRequest {
     Map<String, String> queryParams = {};
     if (pseudo != null) queryParams['pseudo'] = Uri.encodeComponent(pseudo);
 
-    List<dynamic> data = await apiService.getRequest("get_users.php", queryParams: queryParams);
+    List<dynamic> data =
+        await apiService.getRequest("get_users.php", queryParams: queryParams);
     return data.map((userData) => UserModel.fromJson(userData)).toList();
   }
 
@@ -54,10 +57,8 @@ class UserRequest {
 
   // Cette méthode permet d'ajouter un nouvel utilisateur à la base
   Future<void> insertUser(String pseudo) async {
-    await apiService.postRequest("post_users.php", {
-      "action": "insert",
-      "pseudo": pseudo
-    });
+    await apiService
+        .postRequest("post_users.php", {"action": "insert", "pseudo": pseudo});
   }
 
   // Cette méthode permet de modifier un utilisateur par son id.
@@ -78,4 +79,29 @@ class UserRequest {
       "id_player": id.toString(),
     });
   }
+
+  Future<void> updateUserTotalExperience(int id, int newTotalExperience) async {
+  try {
+    // Log de débogage pour suivre les valeurs envoyées
+    print("Je passe par là");
+    print(id.toString() + " " + newTotalExperience.toString());
+
+    // Envoie la requête à l'API pour mettre à jour l'expérience du joueur
+    final response = await apiService.postRequest("post_users.php", {
+      "action": "update_total_experience",
+      "id_player": id.toString(),
+      "total_experience": newTotalExperience.toString(),
+    });
+
+    // Vérifie si la réponse est correcte et affiche un log
+    if (response['success'] != null) {
+      print("Mise à jour réussie de l'expérience !");
+    } else {
+      print("Erreur lors de la mise à jour : ${response['message']}");
+    }
+  } catch (e) {
+    print("Erreur : $e");
+  }
+}
+
 }

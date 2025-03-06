@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
-import '../../viewmodels/user_viewmodel.dart';
+import '../../viewmodels/user_view_model.dart';
 
 class UserForm extends StatefulWidget {
   final UserViewModel viewModel;

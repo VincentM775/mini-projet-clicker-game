@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled1/views/home_view.dart';
 import 'core/config/config.dart';
-import 'viewmodels/user_viewmodel.dart';
+import 'viewmodels/user_view_model.dart';
 
 Future main() async {
   await Config.load();

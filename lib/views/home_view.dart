@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/user_viewmodel.dart';
+import '../viewmodels/user_view_model.dart';
 import '../models/user_model.dart';
 import '../widgets/form/user_form.dart';
 import '../widgets/users_table.dart';
@@ -42,7 +42,6 @@ class _HomeViewState extends State<HomeView> {
         child: Consumer<UserViewModel>(
           builder: (context, viewModel, child) {
             if (viewModel.isLoading) {
-              // C'est l'animation du loader
               return const Center(child: CircularProgressIndicator());
             } else if (viewModel.errorMessage.isNotEmpty) {
               return Center(child: Text(viewModel.errorMessage));
