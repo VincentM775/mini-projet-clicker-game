@@ -81,27 +81,70 @@ class UserRequest {
   }
 
   Future<void> updateUserTotalExperience(int id, int newTotalExperience) async {
-  try {
-    // Log de débogage pour suivre les valeurs envoyées
-    print("Je passe par là");
-    print(id.toString() + " " + newTotalExperience.toString());
-
-    // Envoie la requête à l'API pour mettre à jour l'expérience du joueur
-    final response = await apiService.postRequest("post_users.php", {
-      "action": "update_total_experience",
-      "id_player": id.toString(),
-      "total_experience": newTotalExperience.toString(),
-    });
-
-    // Vérifie si la réponse est correcte et affiche un log
-    if (response['success'] != null) {
-      print("Mise à jour réussie de l'expérience !");
-    } else {
-      print("Erreur lors de la mise à jour : ${response['message']}");
+    try {
+      // Envoie la requête à l'API pour mettre à jour l'expérience du joueur
+      final response = await apiService.postRequest("post_users.php", {
+        "action": "update_total_experience",
+        "id_player": id.toString(),
+        "total_experience": newTotalExperience.toString(),
+      });
+      // Vérifie si la réponse est correcte et affiche un log
+      if (response['success'] != null) {
+        print("Mise à jour réussie de l'expérience !");
+      } else {
+        print("Erreur lors de la mise à jour : ${response['message']}");
+      }
+    } catch (e) {
+      print("Erreur : $e");
     }
-  } catch (e) {
-    print("Erreur : $e");
   }
-}
+
+  // Cette méthode permet de mettre à jour l'ID de l'ennemi
+  Future<void> updateIdEnnemi(int id, int newIdEnnemi) async {
+    try {
+      // Log de débogage pour suivre les valeurs envoyées
+      print("Mise à jour de l'id_ennemy : $id avec le nouvel id_ennemy : $newIdEnnemi");
+
+      // Envoie la requête à l'API pour mettre à jour l'id_ennemy
+      final response = await apiService.postRequest("post_users.php", {
+        "action": "update_id_ennemy",
+        "id_player": id.toString(),
+        "id_ennemy": newIdEnnemi.toString(),
+      });
+
+      // Vérifie si la réponse est correcte et affiche un log
+      if (response['success'] != null) {
+        print("Mise à jour réussie de l'id_ennemy !");
+      } else {
+        print("Erreur lors de la mise à jour : ${response['message']}");
+      }
+    } catch (e) {
+      print("Erreur : $e");
+    }
+  }
+
+  // Cette méthode permet de mettre à jour le nombre de morts du dernier ennemi
+  Future<void> updateNbrMortDernEnnemi(int id, int newNbrMortDernEnnemi) async {
+    try {
+      // Log de débogage pour suivre les valeurs envoyées
+      print("Mise à jour du nombre de morts du dernier ennemi : $id avec $newNbrMortDernEnnemi");
+
+      // Envoie la requête à l'API pour mettre à jour nbr_mort_dern_ennemi
+      final response = await apiService.postRequest("post_users.php", {
+        "action": "update_nbr_mort_dern_ennemi",
+        "id_player": id.toString(),
+        "nbr_mort_dern_ennemi": newNbrMortDernEnnemi.toString(),
+      });
+
+      // Vérifie si la réponse est correcte et affiche un log
+      if (response['success'] != null) {
+        print("Mise à jour réussie du nbr_mort_dern_ennemi !");
+      } else {
+        print("Erreur lors de la mise à jour : ${response['message']}");
+      }
+    } catch (e) {
+      print("Erreur : $e");
+    }
+  }
 
 }

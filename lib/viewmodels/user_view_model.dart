@@ -127,4 +127,24 @@ class UserViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  // Méthode pour mettre à jour l'id de l'ennemi
+  Future<void> updateIdEnnemi(int id, int newIdEnnemi) async {
+    try {
+      await _userRequest.updateIdEnnemi(id, newIdEnnemi);
+      notifyListeners();  // Notifie les abonnés si nécessaire
+    } catch (e) {
+      print("Erreur dans UserViewModel lors de la mise à jour de id_ennemy : $e");
+    }
+  }
+
+  // Méthode pour mettre à jour le nombre de morts du dernier ennemi
+  Future<void> updateNbrMortDernEnnemi(int id, int newNbrMortDernEnnemi) async {
+    try {
+      await _userRequest.updateNbrMortDernEnnemi(id, newNbrMortDernEnnemi);
+      notifyListeners();  // Notifie les abonnés si nécessaire
+    } catch (e) {
+      print("Erreur dans UserViewModel lors de la mise à jour de nbr_mort_dern_ennemi : $e");
+    }
+  }
 }

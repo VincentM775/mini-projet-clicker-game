@@ -112,6 +112,32 @@ try {
             $response = ["success" => "Experience mise à jour"];
             break;
 
+        case "update_id_ennemy":
+            if (!isset($data['id_player']) || !isset($data['id_ennemy'])) {
+                throw new Exception("Données insuffisantes");
+            }
+            $query = "UPDATE player SET id_ennemy = :id_ennemy WHERE id_player = :id_player";
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                ':id_ennemy' => filter_var($data['id_ennemy'], FILTER_VALIDATE_INT),
+                ':id_player' => filter_var($data['id_player'], FILTER_VALIDATE_INT),
+            ]);
+            $response = ["success" => "id_ennemy mis à jour"];
+            break;
+
+        case "update_nbr_mort_dern_ennemi":
+            if (!isset($data['id_player']) || !isset($data['nbr_mort_dern_ennemi'])) {
+                throw new Exception("Données insuffisantes");
+            }
+            $query = "UPDATE player SET nbr_mort_dern_ennemi = :nbr_mort_dern_ennemi WHERE id_player = :id_player";
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                ':nbr_mort_dern_ennemi' => filter_var($data['nbr_mort_dern_ennemi'], FILTER_VALIDATE_INT),
+                ':id_player' => filter_var($data['id_player'], FILTER_VALIDATE_INT),
+            ]);
+            $response = ["success" => "nbr_mort_dern_ennemi mis à jour"];
+            break;
+
         default:
             throw new Exception("Action non reconnue");
     }

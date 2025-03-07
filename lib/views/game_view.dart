@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/services/api_service.dart';
 import '../models/user_model.dart';
 import '../viewmodels/user_view_model.dart';
+import '../core/services/enemy_service.dart';
+import '../models/enemy_model.dart';
 
 class GameView extends StatefulWidget {
-  final int userId; // Ajoute cette variable pour recevoir l'id
+  final int userId;
   const GameView({super.key, required this.userId});
 
   @override
@@ -13,10 +16,12 @@ class GameView extends StatefulWidget {
 }
 
 class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin {
-  late UserModel _user;  // Variable pour stocker les infos de l'utilisateur
+  late UserModel _user;
+  EnemyModel? _enemy;
   bool _isLoading = true;
 
-  int _counter = 0; // Compteur
+  int _totalExperience = 0;
+  int _nbrVieRestant = 0;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -25,25 +30,52 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100), // Durée de l'effet
-      lowerBound: 0.9, // Réduction à 90% de la taille
-      upperBound: 1.0, // Retour à la taille normale
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.9,
+      upperBound: 1.0,
     );
 
     _scaleAnimation = _controller.drive(CurveTween(curve: Curves.easeOut));
-    _user = UserModel(id: 0, pseudo: 'Inconnu', total_experience: 0, id_ennemy: 0, nbr_mort_dern_ennemi: 0); // Initialiser _user
+    _user = UserModel(
+      id: 0,
+      pseudo: 'Inconnu',
+      total_experience: 0,
+      id_ennemy: 0,
+      nbr_mort_dern_ennemi: 0,
+    );
     _loadUserData();
   }
 
   Future<void> _loadUserData() async {
-  final userViewModel = Provider.of<UserViewModel>(context, listen: false);
-  await userViewModel.fetchUserById(widget.userId);
-  setState(() {
-    _user = userViewModel.users.firstWhere((user) => user.id == widget.userId, orElse: () => UserModel(id: 0, pseudo: 'Inconnu', total_experience: 0, id_ennemy: 0, nbr_mort_dern_ennemi: 0));
-    _counter = _user.total_experience;
-    _isLoading = false;
-  });
-}
+    final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+    await userViewModel.fetchUserById(widget.userId);
+
+    setState(() {
+      _user = userViewModel.users.firstWhere(
+        (user) => user.id == widget.userId,
+        orElse: () => UserModel(id: 0, pseudo: 'Inconnu', total_experience: 0, id_ennemy: 0, nbr_mort_dern_ennemi: 0),
+      );
+
+      _totalExperience = _user.total_experience;
+      _loadEnemyData();
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _loadEnemyData() async {
+    final enemyService = EnemyService();
+    try {
+      final enemy = await enemyService.getEnemyByLevel(_user.id_ennemy);
+      if (enemy != null) {
+        setState(() {
+          _enemy = enemy;
+          _nbrVieRestant = enemy.totalLife;
+        });
+      }
+    } catch (e) {
+      print('Erreur lors du chargement de l\'ennemi : $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -51,15 +83,55 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  void _incrementCounter() async {
+  void _decrementCounter() async {
+    if (_nbrVieRestant > 0) {
+      setState(() {
+        _nbrVieRestant--;
+      });
+
+      final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+      await userViewModel.updateUserTotalExperience(widget.userId, _totalExperience + 1);
+
+      if (_nbrVieRestant == 0) {
+        _levelUp();
+      }
+
+      _controller.forward(from: 0.9);
+    }
+  }
+
+  void _levelUp() async {
     setState(() {
-      _counter++;
+      _totalExperience += 1 * _user.id_ennemy; // Ajoute de l'expérience en montant de niveau
+
+      if (_user.nbr_mort_dern_ennemi >= 10) {
+        _user = UserModel(
+          id: _user.id,
+          pseudo: _user.pseudo,
+          total_experience: _user.total_experience,
+          id_ennemy: _user.id_ennemy + 1,  // Mise à jour du niveau de l'ennemi
+          nbr_mort_dern_ennemi: 0,         // Réinitialisation du nombre de morts
+        );
+
+        // Mise à jour du niveau de l'ennemi via le UserViewModel
+        final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+        userViewModel.updateIdEnnemi(_user.id, _user.id_ennemy);  // Mise à jour de l'id_ennemy
+      } else {
+        _user = UserModel(
+          id: _user.id,
+          pseudo: _user.pseudo,
+          total_experience: _user.total_experience,
+          id_ennemy: _user.id_ennemy,  // Reste le même
+          nbr_mort_dern_ennemi: _user.nbr_mort_dern_ennemi + 1, // Incrémentation des morts
+        );
+
+        // Mise à jour du nombre de morts du dernier ennemi via le UserViewModel
+        final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+        userViewModel.updateNbrMortDernEnnemi(_user.id, _user.nbr_mort_dern_ennemi);
+      }
     });
 
-    final userViewModel = Provider.of<UserViewModel>(context, listen: false);
-    await userViewModel.updateUserTotalExperience(widget.userId, _counter);
-
-    _controller.forward(from: 0.9);
+    await _loadEnemyData();
   }
 
   @override
@@ -67,7 +139,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -114,7 +185,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   Column(
                     children: [
                       Text(
-                        'Expérience : ${_user.total_experience}',
+                        'Expérience : $_totalExperience',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                       ),
                     ],
@@ -137,12 +208,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '$_counter',
+                  '$_nbrVieRestant',
                   style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: _incrementCounter,
+                  onTap: _decrementCounter,
                   child: ScaleTransition(
                     scale: _scaleAnimation,
                     child: Image.asset(

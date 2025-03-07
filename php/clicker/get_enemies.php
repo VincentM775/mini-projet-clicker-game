@@ -1,6 +1,10 @@
 <?php
 	require_once('db.php');
 	
+	header("Access-Control-Allow-Origin: *");
+	header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+	header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 	$query = 'SELECT * FROM Enemy WHERE 1=1';
 	$params = [];
 
@@ -36,4 +40,5 @@
 	    http_response_code(500);
 	    echo json_encode(["error" => "Erreur serveur : " . $e->getMessage()]);
 	}
+	
 
