@@ -2,7 +2,7 @@
 
     $dns = 'mysql:host=localhost;dbname=clicker;charset=utf8mb4';
     $user = 'root';
-    $password = 'root';
+    $password = '';
 
     try {
         $db = new PDO($dns, $user, $password);
