@@ -51,16 +51,19 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     await userViewModel.fetchUserById(widget.userId);
 
     setState(() {
-      _user = userViewModel.users.firstWhere(
-        (user) => user.id == widget.userId,
-        orElse: () => UserModel(id: 0, pseudo: 'Inconnu', total_experience: 0, id_ennemy: 0, nbr_mort_dern_ennemi: 0),
+      _user = userViewModel.user ?? UserModel(
+        id: 1,
+        pseudo: 'Inconnu',
+        total_experience: 0,
+        id_ennemy: 1,
+        nbr_mort_dern_ennemi: 0,
       );
-
       _totalExperience = _user.total_experience;
       _loadEnemyData();
       _isLoading = false;
     });
   }
+
 
   Future<void> _loadEnemyData() async {
     final enemyService = EnemyService();
