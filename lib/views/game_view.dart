@@ -24,6 +24,9 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
   int _nbrVieRestant = 0;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  bool _showUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
+  bool _showShopPanel = false; // 👈 Booléen pour afficher le Shop
+
 
   @override
   void initState() {
@@ -155,6 +158,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
           splashColor: Colors.white,
           mouseCursor: SystemMouseCursors.click,
         ),
+        //Y'a moyen de faire apparaitre un boutton retour sans sa. je le testerais après
         title: const Text(
           'Clicker Game',
           style: TextStyle(fontSize: 18, color: Colors.white),
@@ -171,27 +175,99 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
               color: Colors.brown,
               padding: const EdgeInsets.all(16.0),
               alignment: Alignment.topCenter,
-              child: Row(
+              child: Column(
                 children: [
-                  Column(
+                  Row(
                     children: [
-                      Text(
-                        'Pseudo : ${_user.pseudo}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                      Column(
+                        children: [
+                          Text(
+                            'Pseudo : ${_user.pseudo}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Column(
+                        children: [
+                          Text(
+                            'Expérience : $_totalExperience',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Column(
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Expérience : $_totalExperience',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showUpgradePanel = !_showUpgradePanel; // 👈 Active/désactive l'affichage
+                            _showShopPanel = false; // 👈 Ferme Shop si ouvert
+                          });
+                        },
+                        icon: const Icon(Icons.upgrade, color: Colors.white),
+                        label: const Text("Amélioration", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade800,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const Padding(padding: EdgeInsets.symmetric(horizontal: 5.0)),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showShopPanel = !_showShopPanel;
+                            _showUpgradePanel = false; // 👈 Ferme Amélioration si ouvert
+                          });
+                        },
+                        icon: const Icon(Icons.shopping_cart, color: Colors.white),
+                        label: const Text("Shop", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ],
                   ),
+                  // --- SECTION AMÉLIORATION ---
+                  if (_showUpgradePanel)
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      height: 200,
+                      //height à enlever après implementation du code
+                      color: Colors.white,
+                      child: const Center(
+                        child: Text("Page Amélioration", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+
+                  // --- SECTION SHOP ---
+                  if (_showShopPanel)
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      height: 200,
+                      //height à enlever après implementation du code
+                      color: Colors.blue.shade200,
+                      child: const Center(
+                        child: Text("Page Shop", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    )
                 ],
-              ),
+              )
             ),
           ),
           Expanded(

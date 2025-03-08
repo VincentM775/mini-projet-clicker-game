@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import '../core/services/upgrade_service.dart';
 import '../core/services/user_service.dart';
 import '../models/user_model.dart';
+
 
 class UserViewModel extends ChangeNotifier {
   final UserRequest _userRequest = UserRequest();
   List<UserModel> _users = [];
   bool _isLoading = false;
   String _error = '';
+  final UpgradeService _upgradeService = UpgradeService();  // Service d'amélioration
 
   List<UserModel> get users => _users;
 
@@ -147,4 +150,5 @@ class UserViewModel extends ChangeNotifier {
       print("Erreur dans UserViewModel lors de la mise à jour de nbr_mort_dern_ennemi : $e");
     }
   }
+
 }
