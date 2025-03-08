@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/services/api_service.dart';
@@ -137,6 +138,22 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     await _loadEnemyData();
   }
 
+  Future<String> getEnemyImagePath(int enemyId) async {
+    List<String> extensions = ['webp', 'png', 'gif'];
+
+    for (String ext in extensions) {
+      String path = 'assets/images/$enemyId.$ext';
+      try {
+        await rootBundle.load(path); // Essaie de charger l'image
+        return path; // Si ça marche, on retourne ce chemin
+      } catch (e) {
+        // L'image avec cette extension n'existe pas, on essaie la suivante
+      }
+    }
+
+    return 'assets/images/1.webp'; // Image par défaut si aucune n'existe
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -207,6 +224,10 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
                 Text(
+                  'Nom : ${_enemy?.name}',
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                Text(
                   'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -219,10 +240,15 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   onTap: _decrementCounter,
                   child: ScaleTransition(
                     scale: _scaleAnimation,
-                    child: Image.asset(
-                      'assets/images/1.webp',
-                      width: 150,
-                      height: 150,
+                    child: FutureBuilder<String>(
+                      future: getEnemyImagePath(_user.id_ennemy),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError || !snapshot.hasData) {
+                          return Image.asset('assets/images/default.webp', width: 150, height: 150); // Image par défaut
+                        } else {
+                          return Image.asset(snapshot.data!, width: 150, height: 150);
+                        }
+                      },
                     ),
                   ),
                 ),
