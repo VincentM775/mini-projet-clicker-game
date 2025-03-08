@@ -142,7 +142,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     List<String> extensions = ['webp', 'png', 'gif'];
 
     for (String ext in extensions) {
-      String path = 'assets/images/$enemyId.$ext';
+      String path = 'assets/enemies/$enemyId.$ext';
       try {
         await rootBundle.load(path); // Essaie de charger l'image
         return path; // Si ça marche, on retourne ce chemin
@@ -151,7 +151,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       }
     }
 
-    return 'assets/images/1.webp'; // Image par défaut si aucune n'existe
+    return 'assets/enemies/1.webp'; // Image par défaut si aucune n'existe
   }
 
   @override
@@ -244,7 +244,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                       future: getEnemyImagePath(_user.id_ennemy),
                       builder: (context, snapshot) {
                         if (snapshot.hasError || !snapshot.hasData) {
-                          return Image.asset('assets/images/default.webp', width: 150, height: 150); // Image par défaut
+                          return Image.asset('assets/enemies/1.webp', width: 150, height: 150); // Image par défaut
                         } else {
                           return Image.asset(snapshot.data!, width: 150, height: 150);
                         }
