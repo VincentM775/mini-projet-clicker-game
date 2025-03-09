@@ -24,6 +24,9 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
   int _nbrVieRestant = 0;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  double _currentLife = 1.0;  // Représente le pourcentage de vie restant (1.0 = 100%)
+  int _totalLife = 1; // Vie maximale de l'ennemi
+
 
   @override
   void initState() {
@@ -61,7 +64,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       _isLoading = false;
     });
   }
-
   Future<void> _loadEnemyData() async {
     final enemyService = EnemyService();
     try {
@@ -70,6 +72,8 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
         setState(() {
           _enemy = enemy;
           _nbrVieRestant = enemy.totalLife;
+          _totalLife = enemy.totalLife;  // Stocke la vie max pour la barre de vie
+          _currentLife = 1.0;  // Réinitialisation de la barre de vie
         });
       }
     } catch (e) {
@@ -77,16 +81,17 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     }
   }
 
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-
   void _decrementCounter() async {
     if (_nbrVieRestant > 0) {
       setState(() {
         _nbrVieRestant--;
+        _currentLife = _nbrVieRestant / _totalLife;  // Met à jour la barre de vie
       });
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
@@ -99,6 +104,8 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       _controller.forward(from: 0.9);
     }
   }
+
+
 
   void _levelUp() async {
     setState(() {
@@ -207,10 +214,34 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  '$_nbrVieRestant',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Stack(
+                    alignment: Alignment.center, // Centre le texte sur la barre
+                    children: [
+                      SizedBox(
+                        height: 20, // Augmente la hauteur pour une meilleure visibilité
+                        child: LinearProgressIndicator(
+                          value: _currentLife, // Valeur dynamique entre 0.0 et 1.0
+                          backgroundColor: Colors.red[200], // Couleur de fond
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green), // Couleur de la vie restante
+                          minHeight: 20, // Ajuste la hauteur
+                        ),
+                      ),
+                      Text(
+                        '$_nbrVieRestant / $_totalLife', // Affichage des PV restants
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // Assure une bonne visibilité
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: _decrementCounter,
@@ -228,6 +259,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
           ),
         ],
       ),
+
     );
   }
 }
