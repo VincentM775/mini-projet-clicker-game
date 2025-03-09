@@ -165,7 +165,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       ),
       body: Row(
         children: [
-          // Partie gauche (shop) - inchangée
           Expanded(
             flex: 1,
             child: Container(
@@ -196,35 +195,32 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
             ),
           ),
 
-          // Partie droite (ennemi) avec image de fond
           Expanded(
             flex: 1,
             child: Stack(
               children: [
-                // Image de fond pour la partie droite
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/background.jpg', // Chemin de votre image de fond
-                    fit: BoxFit.cover, // Ajuste l'image pour couvrir tout l'espace disponible
+                    'assets/images/background.webp',
+                    fit: BoxFit.cover,
                   ),
                 ),
 
-                // Contenu de la partie droite (ennemi) centré
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Niveau actuel : ${_user.id_ennemy}',
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
                         'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
                         '$_nbrVieRestant',
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       const SizedBox(height: 20),
                       GestureDetector(
