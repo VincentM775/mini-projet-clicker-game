@@ -214,6 +214,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
               ),
             ),
           ),
+
           Expanded(
             flex: 1,
             child: Column(
@@ -250,6 +251,44 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                         }
                       },
                     ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/background.webp',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Niveau actuel : ${_user.id_ennemy}',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      Text(
+                        'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      Text(
+                        '$_nbrVieRestant',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: _decrementCounter,
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Image.asset(
+                            'assets/images/1.webp',
+                            width: 150,
+                            height: 150,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
