@@ -2,32 +2,34 @@ class UpgradeModel {
   final int id;
   final String name;
   final String description;
-  final int cost;  // Le coût de l'amélioration (par exemple en XP)
+  int cost;
+  int level;  // Ajout du niveau de l'amélioration
 
   UpgradeModel({
     required this.id,
     required this.name,
     required this.description,
     required this.cost,
+    required this.level,
   });
 
-  // Méthode de désérialisation pour convertir un JSON en un objet UpgradeModel
   factory UpgradeModel.fromJson(Map<String, dynamic> json) {
     return UpgradeModel(
-      id: json['id'],  // Assure-toi que les clés JSON correspondent aux noms des propriétés
+      id: json['id'],
       name: json['name'],
       description: json['description'],
       cost: json['cost'],
+      level: json['level'] ??1,  // On récupère le niveau depuis l'API
     );
   }
 
-  // Méthode de sérialisation pour convertir un objet UpgradeModel en JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'description': description,
       'cost': cost,
+      'level': level,
     };
   }
 }

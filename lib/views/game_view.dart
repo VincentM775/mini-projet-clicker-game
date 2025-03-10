@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -98,12 +100,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
   void _showUpgradePanel() async {
     final upgradeService = UpgradeService();
     try {
-      final ameliorationList = await upgradeService.getUpgrades();
+      final ameliorationList = await upgradeService.getUpgrades(_user.id);
       setState(() {
-        ameliorations = ameliorationList.map((amelioration) => amelioration).toList();  // Mettre à jour la liste des items du shop
+        ameliorations = ameliorationList;
       });
     } catch (e) {
-      print("Erreur lors du chargement du shop: $e");
+      print("Erreur lors du chargement des améliorations: $e");
     }
   }
 
@@ -141,12 +143,39 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     }
   }
 
+
+  // void _applyUpgrade(int upgradeId) async {
+  //   final upgradeService = UpgradeService();
+  //   try {
+  //     await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
+  //     setState(() {
+  //       // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
+  //     });
+  //   } catch (e) {
+  //     print("Erreur lors de l'amélioration: $e");
+  //   }
+  // }
+
   void _applyUpgrade(int upgradeId) async {
     final upgradeService = UpgradeService();
     try {
-      await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
+      final result = await upgradeService.applyUpgrade(_user.id, upgradeId);
+      if (result.containsKey('error')) {
+        print(result['error']);
+        return;
+      }
+
+      print("Résultat après amélioration: $result"); // 🔍 Debug
+
       setState(() {
-        // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
+        _totalExperience = result['new_xp'] ?? _totalExperience;  // Évite le `null`
+
+        for (var amelioration in ameliorations) {
+          if (amelioration.id == upgradeId) {
+            amelioration.level = (amelioration.level + 1); // Ajout d'un fallback
+            amelioration.cost = (amelioration.cost * pow(2.1, amelioration.level)).round();
+          }
+        }
       });
     } catch (e) {
       print("Erreur lors de l'amélioration: $e");
