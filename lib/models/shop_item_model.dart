@@ -2,13 +2,15 @@ class ShopItemModel {
   final int id;
   final String name;
   final String description;
-  final int price;  // Le prix de l'objet en monnaie (par exemple, pièces, gemmes, etc.)
+  final int price; // Le prix de l'objet en monnaie (par exemple, pièces, gemmes, etc.)
+  final int temps;
 
   ShopItemModel({
     required this.id,
     required this.name,
     required this.description,
     required this.price,
+    required this.temps,
   });
 
   // Méthode de désérialisation pour convertir un JSON en un objet ShopItemModel
@@ -18,6 +20,7 @@ class ShopItemModel {
       name: json['name'],
       description: json['description'],
       price: json['price'],
+      temps: json['temps'],
     );
   }
 
@@ -28,6 +31,7 @@ class ShopItemModel {
       'name': name,
       'description': description,
       'price': price,
+      'temps': temps,
     };
   }
 }
