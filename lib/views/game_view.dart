@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:untitled1/core/services/upgrade_service.dart';
+import 'package:untitled1/models/shop_item_model.dart';
+import 'package:untitled1/models/upgrade_model.dart';
 
 import '../core/services/api_service.dart';
+import '../core/services/shop_service.dart';
 import '../models/user_model.dart';
 import '../viewmodels/user_view_model.dart';
 import '../core/services/enemy_service.dart';
@@ -28,6 +32,11 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
   double _currentLife = 1.0;  // Représente le pourcentage de vie restant (1.0 = 100%)
   int _totalLife = 1; // Vie maximale de l'ennemi
 
+  bool _isShowUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
+  bool _isShowShopPanel = false; // 👈 Booléen pour afficher le Shop
+
+  List<UpgradeModel> ameliorations = [];  // Liste des améliorations
+  List<ShopItemModel> shopItems = [];      // Liste des items du shop
 
   @override
   void initState() {
@@ -85,6 +94,56 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       print('Erreur lors du chargement de l\'ennemi : $e');
     }
   }
+
+  void _showUpgradePanel() async {
+    final upgradeService = UpgradeService();
+    try {
+      final ameliorationList = await upgradeService.getUpgrades();
+      setState(() {
+        ameliorations = ameliorationList.map((amelioration) => amelioration).toList();  // Mettre à jour la liste des items du shop
+      });
+    } catch (e) {
+      print("Erreur lors du chargement du shop: $e");
+    }
+  }
+
+  void _showShopPanel() async {
+    final shopService = ShopService();
+    try {
+      final items = await shopService.getShopItems();
+      setState(() {
+        shopItems = items.map((item) => item).toList();  // Mettre à jour la liste des items du shop
+      });
+    } catch (e) {
+      print("Erreur lors du chargement du shop: $e");
+    }
+  }
+
+  void _purchaseItem(int itemId) async {
+    final shopService = ShopService();
+    try {
+      await shopService.purchaseItem(_user.id, itemId);  // Effectuer l'achat via l'API
+      setState(() {
+        // Mettre à jour l'état de l'UI, comme l'ajout de l'objet au profil de l'utilisateur
+      });
+    } catch (e) {
+      print("Erreur lors de l'achat: $e");
+    }
+  }
+
+
+  void _applyUpgrade(int upgradeId) async {
+    final upgradeService = UpgradeService();
+    try {
+      await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
+      setState(() {
+        // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
+      });
+    } catch (e) {
+      print("Erreur lors de l'amélioration: $e");
+    }
+  }
+
 
   @override
   void dispose() {
@@ -162,6 +221,65 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     return 'assets/enemies/1.webp'; // Image par défaut si aucune n'existe
   }
 
+  Widget _buildUpgradePanel() {
+    return ameliorations.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : Expanded(
+      child: ListView.builder(
+        itemCount: ameliorations.length,
+        itemBuilder: (context, index) {
+          final amelioration = ameliorations[index];
+          return Container(
+            color: Colors.white,  // Fond blanc
+            margin: const EdgeInsets.symmetric(vertical: 4.0),  // Un peu d'espace entre les éléments
+            child: ListTile(
+              title: Text(amelioration.name),
+              subtitle: Text(amelioration.description),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  // Passe l'ID de l'élément à la méthode d'upgrade
+                  _applyUpgrade(amelioration.id);
+                },
+                child: Text('${amelioration.cost} XP'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+
+  Widget _buildShopPanel() {
+    return shopItems.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : Expanded(
+      child: ListView.builder(
+        itemCount: shopItems.length,
+        itemBuilder: (context, index) {
+          final item = shopItems[index];
+          return Container(
+            color: Colors.white,  // Fond blanc
+            margin: const EdgeInsets.symmetric(vertical: 4.0),  // Un peu d'espace entre les éléments
+            child: ListTile(
+              title: Text(item.name),
+              subtitle: Text(item.description),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  // Passe l'ID de l'élément à la méthode de purchase
+                  _purchaseItem(item.id);
+                },
+                child: Text('${item.price} XP'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -199,27 +317,83 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
               color: Colors.brown,
               padding: const EdgeInsets.all(16.0),
               alignment: Alignment.topCenter,
-              child: Row(
+              child: Column(
                 children: [
-                  Column(
+                  Row(
                     children: [
-                      Text(
-                        'Pseudo : ${_user.pseudo}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                      Column(
+                        children: [
+                          Text(
+                            'Pseudo : ${_user.pseudo}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Column(
+                        children: [
+                          Text(
+                            'Expérience : $_totalExperience',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Column(
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Expérience : $_totalExperience',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isShowUpgradePanel = !_isShowUpgradePanel; // Active/désactive l'affichage
+                            _isShowShopPanel = false; // Ferme Shop si ouvert
+                          });
+                          if (_isShowUpgradePanel) {
+                            _showUpgradePanel(); // Appel de la fonction pour afficher le panneau du shop
+                          }
+                        },
+                        icon: const Icon(Icons.upgrade, color: Colors.white),
+                        label: const Text("Amélioration", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade800,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
+                      const Padding(padding: EdgeInsets.symmetric(horizontal: 5.0)),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isShowShopPanel = !_isShowShopPanel;
+                            _isShowUpgradePanel = false; // Ferme Amélioration si ouvert
+                          });
+                          if (_isShowShopPanel) {
+                            _showShopPanel(); // Appel de la fonction pour afficher le panneau du shop
+                          }
+                        },
+                        icon: const Icon(Icons.shopping_cart, color: Colors.white),
+                        label: const Text("Shop", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+
                     ],
                   ),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
+                  if (_isShowUpgradePanel) _buildUpgradePanel(),
+                  if (_isShowShopPanel) _buildShopPanel(),
+
                 ],
-              ),
+              )
             ),
           ),
           Expanded(
