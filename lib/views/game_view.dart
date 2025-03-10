@@ -121,16 +121,25 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
 
   void _purchaseItem(ShopItemModel item) async {
     final shopService = ShopService();
+
     try {
-      await shopService.purchaseItem(_user.id, item.id);  // Effectuer l'achat via l'API
+      // Purchase the item via the ShopService
+      await shopService.purchaseItem(_user.id, item.id);  // Perform purchase via the API
+
+      // Once the purchase is complete, we apply the item effects and update the XP
+      int updatedXp = await shopService.applyItemEffects(_user.id, item.id);
+
+      // Now update the user XP in the UI with setState
       setState(() {
-        // Mettre à jour l'état de l'UI, comme l'ajout de l'objet au profil de l'utilisateur
+        _user.total_experience = updatedXp; // Update the XP to reflect the change
       });
+
+      print("Achat effectué avec succès ! XP mis à jour à: $_user.total_experience");
+
     } catch (e) {
       print("Erreur lors de l'achat: $e");
     }
   }
-
 
   void _applyUpgrade(int upgradeId) async {
     final upgradeService = UpgradeService();
