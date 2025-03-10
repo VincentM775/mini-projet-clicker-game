@@ -30,5 +30,4 @@ class UserModel {
       nbr_mort_dern_ennemi: json['nbr_mort_dern_ennemi'] ?? 0
     );
   }
-
 }

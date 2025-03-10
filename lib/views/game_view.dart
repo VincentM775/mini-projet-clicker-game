@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:untitled1/core/services/upgrade_service.dart';
+import 'package:untitled1/models/shop_item_model.dart';
+import 'package:untitled1/models/upgrade_model.dart';
 
 import '../core/services/api_service.dart';
+import '../core/services/shop_service.dart';
 import '../models/user_model.dart';
 import '../viewmodels/user_view_model.dart';
 import '../core/services/enemy_service.dart';
@@ -24,9 +28,11 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
   int _nbrVieRestant = 0;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _showUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
-  bool _showShopPanel = false; // 👈 Booléen pour afficher le Shop
+  bool _isShowUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
+  bool _isShowShopPanel = false; // 👈 Booléen pour afficher le Shop
 
+  List<UpgradeModel> ameliorations = [];  // Liste des améliorations
+  List<ShopItemModel> shopItems = [];      // Liste des items du shop
 
   @override
   void initState() {
@@ -79,6 +85,56 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       print('Erreur lors du chargement de l\'ennemi : $e');
     }
   }
+
+  void _showUpgradePanel() async {
+    final upgradeService = UpgradeService();
+    try {
+      final ameliorationList = await upgradeService.getUpgrades();
+      setState(() {
+        ameliorations = ameliorationList.map((amelioration) => amelioration).toList();  // Mettre à jour la liste des items du shop
+      });
+    } catch (e) {
+      print("Erreur lors du chargement du shop: $e");
+    }
+  }
+
+  void _showShopPanel() async {
+    final shopService = ShopService();
+    try {
+      final items = await shopService.getShopItems();
+      setState(() {
+        shopItems = items.map((item) => item).toList();  // Mettre à jour la liste des items du shop
+      });
+    } catch (e) {
+      print("Erreur lors du chargement du shop: $e");
+    }
+  }
+
+  void _purchaseItem(int itemId) async {
+    final shopService = ShopService();
+    try {
+      await shopService.purchaseItem(_user.id, itemId);  // Effectuer l'achat via l'API
+      setState(() {
+        // Mettre à jour l'état de l'UI, comme l'ajout de l'objet au profil de l'utilisateur
+      });
+    } catch (e) {
+      print("Erreur lors de l'achat: $e");
+    }
+  }
+
+
+  void _applyUpgrade(int upgradeId) async {
+    final upgradeService = UpgradeService();
+    try {
+      await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
+      setState(() {
+        // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
+      });
+    } catch (e) {
+      print("Erreur lors de l'amélioration: $e");
+    }
+  }
+
 
   @override
   void dispose() {
@@ -137,6 +193,65 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     await _loadEnemyData();
   }
 
+  Widget _buildUpgradePanel() {
+    return ameliorations.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : Expanded(
+      child: ListView.builder(
+        itemCount: ameliorations.length,
+        itemBuilder: (context, index) {
+          final amelioration = ameliorations[index];
+          return Container(
+            color: Colors.white,  // Fond blanc
+            margin: const EdgeInsets.symmetric(vertical: 4.0),  // Un peu d'espace entre les éléments
+            child: ListTile(
+              title: Text(amelioration.name),
+              subtitle: Text(amelioration.description),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  // Passe l'ID de l'élément à la méthode d'upgrade
+                  _applyUpgrade(amelioration.id);
+                },
+                child: Text('${amelioration.cost} XP'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+
+  Widget _buildShopPanel() {
+    return shopItems.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : Expanded(
+      child: ListView.builder(
+        itemCount: shopItems.length,
+        itemBuilder: (context, index) {
+          final item = shopItems[index];
+          return Container(
+            color: Colors.white,  // Fond blanc
+            margin: const EdgeInsets.symmetric(vertical: 4.0),  // Un peu d'espace entre les éléments
+            child: ListTile(
+              title: Text(item.name),
+              subtitle: Text(item.description),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  // Passe l'ID de l'élément à la méthode de purchase
+                  _purchaseItem(item.id);
+                },
+                child: Text('${item.cost} XP'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -158,7 +273,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
           splashColor: Colors.white,
           mouseCursor: SystemMouseCursors.click,
         ),
-        //Y'a moyen de faire apparaitre un boutton retour sans sa. je le testerais après
         title: const Text(
           'Clicker Game',
           style: TextStyle(fontSize: 18, color: Colors.white),
@@ -205,9 +319,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                       ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
-                            _showUpgradePanel = !_showUpgradePanel; // 👈 Active/désactive l'affichage
-                            _showShopPanel = false; // 👈 Ferme Shop si ouvert
+                            _isShowUpgradePanel = !_isShowUpgradePanel; // Active/désactive l'affichage
+                            _isShowShopPanel = false; // Ferme Shop si ouvert
                           });
+                          if (_isShowUpgradePanel) {
+                            _showUpgradePanel(); // Appel de la fonction pour afficher le panneau du shop
+                          }
                         },
                         icon: const Icon(Icons.upgrade, color: Colors.white),
                         label: const Text("Amélioration", style: TextStyle(color: Colors.white)),
@@ -223,9 +340,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                       ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
-                            _showShopPanel = !_showShopPanel;
-                            _showUpgradePanel = false; // 👈 Ferme Amélioration si ouvert
+                            _isShowShopPanel = !_isShowShopPanel;
+                            _isShowUpgradePanel = false; // Ferme Amélioration si ouvert
                           });
+                          if (_isShowShopPanel) {
+                            _showShopPanel(); // Appel de la fonction pour afficher le panneau du shop
+                          }
                         },
                         icon: const Icon(Icons.shopping_cart, color: Colors.white),
                         label: const Text("Shop", style: TextStyle(color: Colors.white)),
@@ -237,35 +357,13 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                           ),
                         ),
                       ),
+
                     ],
                   ),
-                  // --- SECTION AMÉLIORATION ---
-                  if (_showUpgradePanel)
-                    Container(
-                      margin: const EdgeInsets.only(top: 10),
-                      padding: const EdgeInsets.all(16),
-                      width: double.infinity,
-                      height: 200,
-                      //height à enlever après implementation du code
-                      color: Colors.white,
-                      child: const Center(
-                        child: Text("Page Amélioration", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
+                  if (_isShowUpgradePanel) _buildUpgradePanel(),
+                  if (_isShowShopPanel) _buildShopPanel(),
 
-                  // --- SECTION SHOP ---
-                  if (_showShopPanel)
-                    Container(
-                      margin: const EdgeInsets.only(top: 10),
-                      padding: const EdgeInsets.all(16),
-                      width: double.infinity,
-                      height: 200,
-                      //height à enlever après implementation du code
-                      color: Colors.blue.shade200,
-                      child: const Center(
-                        child: Text("Page Shop", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      ),
-                    )
                 ],
               )
             ),

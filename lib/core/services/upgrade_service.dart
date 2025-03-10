@@ -1,53 +1,32 @@
-
-import '../../models/user_model.dart';
-import 'api_service.dart';
+import 'package:flutter/material.dart';
+import '../../models/upgrade_model.dart'; // Import du modèle d'amélioration
+import '../services/api_service.dart';   // Service API pour effectuer les requêtes
 
 class UpgradeService {
-  final ApiService apiService = ApiService();
+  final ApiService _apiService = ApiService(); // Instance de ApiService pour communiquer avec l'API
 
-  // Fonction pour multiplier les points de clic par 10 (et l'envoyer au backend si nécessaire)
-  Future<void> multiplyClickPointsBy10(UserModel user) async {
+  // Récupérer la liste des améliorations depuis l'API
+  Future<List<UpgradeModel>> getUpgrades() async {
     try {
-      // Exemple d'appel API pour mettre à jour le total d'expérience
-      Map<String, dynamic> data = {
-        'userId': user.id,
-        'experience': user.total_experience * 10,
-      };
-
-      // Effectuer la requête POST pour mettre à jour l'expérience
-      var response = await apiService.postRequest('updateExperience.php', data);
-
-      if (response['status'] == 'success') {
-        user.total_experience = response['newExperience'];  // Mise à jour des données utilisateur avec la réponse de l'API
-      } else {
-        throw Exception('Erreur lors de la mise à jour des points');
+      final data = await _apiService.getRequest('get_upgrades.php');  // Appel à l'API pour récupérer les améliorations
+      List<UpgradeModel> upgrades = [];  // Liste pour stocker les améliorations
+      for (var upgrade in data) {
+        upgrades.add(UpgradeModel.fromJson(upgrade));  // Mapper les données JSON dans des objets UpgradeModel
       }
+      return upgrades;  // Retourner la liste des améliorations
     } catch (e) {
-      print('Erreur API: $e');
-      throw Exception('Erreur de communication avec le serveur');
+      print("Erreur lors de la récupération des améliorations: $e");
+      return [];  // Retourner une liste vide en cas d'erreur
     }
   }
 
-  // Fonction pour activer l'autoclicker (et envoyer cette information au backend)
-  Future<void> enableAutoClicker(UserModel user) async {
+  // Appliquer une amélioration à l'utilisateur
+  Future<void> applyUpgrade(int userId, int upgradeId) async {
     try {
-      // Exemple d'appel API pour activer un autoclicker
-      Map<String, dynamic> data = {
-        'userId': user.id,
-        'autoClickerEnabled': true,
-      };
-
-      // Effectuer la requête POST pour activer l'autoclicker
-      var response = await apiService.postRequest('enableAutoClicker.php', data);
-
-      if (response['status'] == 'success') {
-        user.autoClickerEnabled = true;  // Mise à jour des données utilisateur avec la réponse de l'API
-      } else {
-        throw Exception('Erreur lors de l\'activation de l\'autoclicker');
-      }
+      final data = {'user_id': userId, 'upgrade_id': upgradeId};  // Paramètres pour l'amélioration
+      await _apiService.postRequest('apply_upgrade', data);  // Appel à l'API pour appliquer l'amélioration
     } catch (e) {
-      print('Erreur API: $e');
-      throw Exception('Erreur de communication avec le serveur');
+      throw Exception('Erreur lors de l\'application de l\'amélioration: $e');
     }
   }
 }
