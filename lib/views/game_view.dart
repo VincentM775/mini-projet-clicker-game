@@ -241,7 +241,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   // Passe l'ID de l'élément à la méthode de purchase
                   _purchaseItem(item.id);
                 },
-                child: Text('${item.cost} XP'),
+                child: Text('${item.price} XP'),
               ),
             ),
           );

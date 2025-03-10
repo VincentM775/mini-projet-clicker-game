@@ -6,7 +6,7 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 // Initialisation de la requête SQL
-$query = 'SELECT id, name, description, cost, effect FROM shop_items WHERE 1=1';
+$query = 'SELECT id, name, description, price, effect FROM shop_items WHERE 1=1';
 $params = [];
 
 // Vérifier si 'id_item' est passé en paramètre GET et l'ajouter à la requête
