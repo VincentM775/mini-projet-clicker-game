@@ -402,9 +402,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.asset(
-                      'assets/images/background.webp',
-                      fit: BoxFit.cover,
+                    child: Opacity(
+                      opacity: 0.84,
+                      child: Image.asset(
+                        'assets/images/background.webp',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Center(
