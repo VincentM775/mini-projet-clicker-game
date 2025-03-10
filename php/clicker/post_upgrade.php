@@ -34,7 +34,9 @@ try {
     $user_upgrade = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $level = $user_upgrade ? (int)$user_upgrade['level'] + 1 : 1;
-    $new_cost = (int) round($base_cost * pow(2.1, $level)); // Calcul du nouveau coût
+
+    $new_cost = (int) round($base_cost * pow(2.1, $level-1)); // Calcul du nouveau coût
+
 
     // Vérifier si l'utilisateur a assez d'expérience
     $stmt = $db->prepare("SELECT total_experience FROM player WHERE id_player = :user_id");
@@ -42,7 +44,7 @@ try {
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$player || (int)$player['total_experience'] < $new_cost) {
-        echo json_encode(['error' => 'Expérience insuffisante']);
+        echo json_encode(['error' => 'Expérience insuffisante : ' . $player['total_experience'] . ' < ' . $new_cost]);
         exit;
     }
 
@@ -58,7 +60,7 @@ try {
     }
     $stmt->execute([':user_id' => $user_id, ':upgrade_id' => $upgrade_id, ':level' => $level]);
 
-    echo json_encode(['success' => true, 'new_cost' => $new_cost, 'new_level' => $level]);
+    echo json_encode(['success' => true, 'new_cost' => $new_cost, 'new_level' => $level, 'new_xp' => $player['total_experience'] - $new_cost]);
 
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Erreur base de données: ' . $e->getMessage()]);
