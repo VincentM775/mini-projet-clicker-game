@@ -20,13 +20,27 @@ class ShopService {
     }
   }
 
-// Acheter un objet
+// Méthode pour acheter un objet et l'ajouter à l'utilisateur
   Future<void> purchaseItem(int userId, int itemId) async {
     try {
-      final data = {'user_id': userId, 'item_id': itemId};
-      await _apiService.postRequest('shop/purchase', data);  // Appel à postRequest pour effectuer un achat
+      // Créer un objet avec les données nécessaires
+      final data = {
+        'action': 'insert_user_shop_item',  // Action pour l'insertion dans la table user_shop_item
+        'user_id': userId,                  // ID de l'utilisateur
+        'shop_item_id': itemId,             // ID de l'objet acheté
+      };
+
+      // Utiliser l'apiService pour envoyer les données en POST
+      final response = await _apiService.postRequest('post_user_shop_item.php', data);
+
+      // Vérification de la réponse
+      if (response['success'] == "Objet ajouté à l'utilisateur") {
+        print("Achat effectué avec succès !");
+      } else {
+        print("Erreur lors de l'achat : ${response['error']}");
+      }
     } catch (e) {
-      throw Exception('Erreur lors de l\'achat de l\'objet: $e');
+      print("Erreur lors de la demande à l'API: $e");
     }
   }
 }

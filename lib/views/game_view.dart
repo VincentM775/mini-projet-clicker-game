@@ -119,10 +119,10 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     }
   }
 
-  void _purchaseItem(int itemId) async {
+  void _purchaseItem(ShopItemModel item) async {
     final shopService = ShopService();
     try {
-      await shopService.purchaseItem(_user.id, itemId);  // Effectuer l'achat via l'API
+      await shopService.purchaseItem(_user.id, item.id);  // Effectuer l'achat via l'API
       setState(() {
         // Mettre à jour l'état de l'UI, comme l'ajout de l'objet au profil de l'utilisateur
       });
@@ -267,7 +267,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
               trailing: ElevatedButton(
                 onPressed: () {
                   // Passe l'ID de l'élément à la méthode de purchase
-                  _purchaseItem(item.id);
+                  _purchaseItem(item);
                 },
                 child: Text('${item.price} XP'),
               ),
