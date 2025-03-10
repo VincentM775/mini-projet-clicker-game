@@ -146,6 +146,22 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     await _loadEnemyData();
   }
 
+  Future<String> getEnemyImagePath(int enemyId) async {
+    List<String> extensions = ['webp', 'png', 'gif'];
+
+    for (String ext in extensions) {
+      String path = 'assets/enemies/$enemyId.$ext';
+      try {
+        await rootBundle.load(path); // Essaie de charger l'image
+        return path; // Si ça marche, on retourne ce chemin
+      } catch (e) {
+        // L'image avec cette extension n'existe pas, on essaie la suivante
+      }
+    }
+
+    return 'assets/enemies/1.webp'; // Image par défaut si aucune n'existe
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -213,7 +229,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/enemies/background.webp',
+                      'assets/images/background.webp',
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -222,9 +238,10 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Niveau actuel : ${_user.id_ennemy}',
+                          'Niveau ${_user.id_ennemy} : ${_enemy?.name}',
                           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                         ),
+
                         Text(
                           'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -259,10 +276,15 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                           onTap: _decrementCounter,
                           child: ScaleTransition(
                             scale: _scaleAnimation,
-                            child: Image.asset(
-                              'assets/images/1.webp',
-                              width: 150,
-                              height: 150,
+                            child: FutureBuilder<String>(
+                              future: getEnemyImagePath(_user.id_ennemy),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasError || !snapshot.hasData) {
+                                  return Image.asset('assets/enemies/1.webp', width: 150, height: 150); // Image par défaut
+                                } else {
+                                  return Image.asset(snapshot.data!, width: 150, height: 150);
+                                }
+                              },
                             ),
                           ),
                         ),
