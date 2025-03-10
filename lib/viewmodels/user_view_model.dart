@@ -8,6 +8,10 @@ class UserViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String _error = '';
 
+  UserModel? _user;
+  UserModel? get user => _user;
+
+
   List<UserModel> get users => _users;
 
   bool get isLoading => _isLoading;
@@ -40,21 +44,20 @@ class UserViewModel extends ChangeNotifier {
     _error = '';
 
     try {
-      _users = await _userRequest.getUserById(id) as List<UserModel>;
-
-      // Utiliser addPostFrameCallback pour appeler notifyListeners après la construction du widget
+      _user = await _userRequest.getUserById(id); // Supposé retourner UN utilisateur
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _isLoading = false;
-        notifyListeners(); // Notifie les écouteurs après la fin du build
+        notifyListeners();
       });
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners(); // Notifie les écouteurs après la fin du build, même en cas d'erreur
+        notifyListeners();
       });
     }
   }
+
 
   Future<void> fetchUsersByLastname(String pseudo) async {
     _isLoading = true;

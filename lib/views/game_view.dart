@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/services/api_service.dart';
@@ -54,9 +55,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     await userViewModel.fetchUserById(widget.userId);
 
     setState(() {
-      _user = userViewModel.users.firstWhere(
-        (user) => user.id == widget.userId,
-        orElse: () => UserModel(id: 0, pseudo: 'Inconnu', total_experience: 0, id_ennemy: 0, nbr_mort_dern_ennemi: 0),
+      _user = userViewModel.user ?? UserModel(
+        id: 1,
+        pseudo: 'Inconnu',
+        total_experience: 0,
+        id_ennemy: 1,
+        nbr_mort_dern_ennemi: 0,
       );
 
       _totalExperience = _user.total_experience;
@@ -64,6 +68,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       _isLoading = false;
     });
   }
+
   Future<void> _loadEnemyData() async {
     final enemyService = EnemyService();
     try {
@@ -81,12 +86,12 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
     }
   }
 
-
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   void _decrementCounter() async {
     if (_nbrVieRestant > 0) {
       setState(() {
@@ -104,8 +109,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
       _controller.forward(from: 0.9);
     }
   }
-
-
 
   void _levelUp() async {
     setState(() {
@@ -203,6 +206,49 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
           ),
           Expanded(
             flex: 1,
+            child: Container(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      'assets/enemies/background.webp',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Niveau actuel : ${_user.id_ennemy}',
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        Text(
+                          'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        Text(
+                          '$_nbrVieRestant',
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: _decrementCounter,
+                          child: ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: Image.asset(
+                              'assets/enemies/1.webp',
+                              width: 150,
+                              height: 150,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -259,7 +305,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
           ),
         ],
       ),
-
     );
   }
 }
