@@ -126,6 +126,8 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
         // Mise à jour du niveau de l'ennemi via le UserViewModel
         final userViewModel = Provider.of<UserViewModel>(context, listen: false);
         userViewModel.updateIdEnnemi(_user.id, _user.id_ennemy);  // Mise à jour de l'id_ennemy
+        userViewModel.updateNbrMortDernEnnemi(_user.id, _user.nbr_mort_dern_ennemi);
+
       } else {
         _user = UserModel(
           id: _user.id,
@@ -215,22 +217,42 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                       fit: BoxFit.cover,
                     ),
                   ),
-
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           'Niveau actuel : ${_user.id_ennemy}',
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                         ),
                         Text(
                           'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        Text(
-                          '$_nbrVieRestant',
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                          child: Stack(
+                            alignment: Alignment.center, // Centre le texte sur la barre
+                            children: [
+                              SizedBox(
+                                height: 20, // Augmente la hauteur pour une meilleure visibilité
+                                child: LinearProgressIndicator(
+                                  value: _currentLife, // Valeur dynamique entre 0.0 et 1.0
+                                  backgroundColor: Colors.red[200], // Couleur de fond
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green), // Couleur de la vie restante
+                                  minHeight: 20, // Ajuste la hauteur
+                                ),
+                              ),
+                              Text(
+                                '$_nbrVieRestant / $_totalLife', // Affichage des PV restants
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // Assure une bonne visibilité
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 20),
                         GestureDetector(
@@ -238,7 +260,7 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                           child: ScaleTransition(
                             scale: _scaleAnimation,
                             child: Image.asset(
-                              'assets/enemies/1.webp',
+                              'assets/images/1.webp',
                               width: 150,
                               height: 150,
                             ),
@@ -249,58 +271,6 @@ class _GameViewState extends State<GameView> with SingleTickerProviderStateMixin
                   ),
                 ],
               ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Niveau actuel : ${_user.id_ennemy}',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  child: Stack(
-                    alignment: Alignment.center, // Centre le texte sur la barre
-                    children: [
-                      SizedBox(
-                        height: 20, // Augmente la hauteur pour une meilleure visibilité
-                        child: LinearProgressIndicator(
-                          value: _currentLife, // Valeur dynamique entre 0.0 et 1.0
-                          backgroundColor: Colors.red[200], // Couleur de fond
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green), // Couleur de la vie restante
-                          minHeight: 20, // Ajuste la hauteur
-                        ),
-                      ),
-                      Text(
-                        '$_nbrVieRestant / $_totalLife', // Affichage des PV restants
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white, // Assure une bonne visibilité
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: _decrementCounter,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Image.asset(
-                      'assets/images/1.webp',
-                      width: 150,
-                      height: 150,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
