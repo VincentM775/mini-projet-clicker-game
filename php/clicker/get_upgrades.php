@@ -1,39 +1,32 @@
 <?php
-require_once('db.php');  // Inclure le fichier de connexion à la base de données
+require_once('db.php');  // Connexion à la base de données
 
-header("Access-Control-Allow-Origin: *");  // Ou remplace * par un domaine spécifique pour plus de sécurité
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// Initialisation de la requête SQL pour récupérer les améliorations
-$query = 'SELECT id, name, description, cost FROM upgrades WHERE 1=1';
-$params = [];
+// Vérifier si 'user_id' est passé en paramètre GET
+$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
-// Vérifier si 'id_upgrade' est passé en paramètre GET et l'ajouter à la requête
-if (!empty($_GET['id_upgrade']) && is_numeric($_GET['id_upgrade'])) {
-    $query .= ' AND id = :id_upgrade';
-    $params[':id_upgrade'] = $_GET['id_upgrade'];
-}
+$query = "
+    SELECT
+        u.id,
+        u.name,
+        u.description,
+        u.cost,
+        COALESCE(uu.level, 0) AS level  -- Si l'amélioration n'est pas encore achetée, on met level = 0
+    FROM upgrades u
+    LEFT JOIN user_upgrades uu ON u.id = uu.upgrade_id AND uu.user_id = :user_id
+";
 
-// Vérifier si 'name' est passé en paramètre GET et l'ajouter à la requête
-if (!empty($_GET['name']) && preg_match('/^[a-zA-Z0-9_ ]+$/', $_GET['name'])) {
-    $query .= ' AND name LIKE :name';
-    $params[':name'] = '%' . $_GET['name'] . '%';  // Rechercher des correspondances partielles
-}
+$params = [':user_id' => $user_id];
 
 try {
-    // Préparation et exécution de la requête
     $statement = $db->prepare($query);
     $statement->execute($params);
-
-    // Récupération des résultats sous forme de tableau associatif
     $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-    // Retourner les résultats sous forme JSON
     echo json_encode($rows);
-
 } catch (PDOException $e) {
-    // Gestion des erreurs de base de données
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
 ?>
