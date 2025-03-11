@@ -17,6 +17,14 @@ import '../models/enemy_model.dart';
 
 class GameView extends StatefulWidget {
   final int userId;
+
+  static int nbrDegatsParClick = 1;
+  static int totalExperience = 0;
+  static int gainExp = 1;
+  static int nbrDegatsAutoClicker=0;
+
+
+
   const GameView({super.key, required this.userId});
 
   @override
@@ -29,11 +37,7 @@ class _GameViewState extends State<GameView>
   EnemyModel? _enemy;
   bool _isLoading = true;
 
-  int _totalExperience = 0;
   int _nbrVieRestant = 0;
-  int _nbrDegatsParClick = 1;
-  int _nbrDegatsAutoClicker=0;
-  int _gainExp = 1;
   Timer? _autoClickerTimer;
   bool _isAutoClickerActive = false;
 
@@ -77,9 +81,9 @@ class _GameViewState extends State<GameView>
     print("lalala : ${ameliorationList[1].level }");
     if(ameliorationList[1].level >=1) {
       ameliorations = ameliorationList;
-      _nbrDegatsAutoClicker = pow(2, ameliorations[1].level-1).toInt();
+      GameView.nbrDegatsAutoClicker = pow(2, ameliorations[1].level-1).toInt();
       _startAutoClicker();
-      print("AUTOCLICKER COMMENCER nouvelle valeur de nbrdegatparclick : ${_nbrDegatsAutoClicker}");
+      print("AUTOCLICKER COMMENCER nouvelle valeur de nbrdegatparclick : ${GameView.nbrDegatsAutoClicker}");
 
     }else{
       print("je ne rentre pas la");
@@ -100,7 +104,7 @@ class _GameViewState extends State<GameView>
             nbr_mort_dern_ennemi: 0,
           );
 
-      _totalExperience = _user.total_experience;
+      GameView.totalExperience = _user.total_experience;
       _loadEnemyData();
       _isLoading = false;
     });
@@ -130,9 +134,9 @@ class _GameViewState extends State<GameView>
       final ameliorationList = await upgradeService.getUpgrades(_user.id);
       setState(() {
         ameliorations = ameliorationList;
-        _nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
+        GameView.nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
       });
-      print("nouvelle valeur de nbrdegatparclick : ${_nbrDegatsParClick}");
+      print("nouvelle valeur de nbrdegatparclick : ${GameView.nbrDegatsParClick}");
     } catch (e) {
       print("Erreur lors du chargement des améliorations: $e");
     }
@@ -195,7 +199,7 @@ class _GameViewState extends State<GameView>
     print("Résultat après amélioration: $result"); // 🔍 Debug
 
     setState(() {
-      _totalExperience = result['new_xp'] ?? _totalExperience; // Met à jour XP
+      GameView.totalExperience = result['new_xp'] ?? GameView.totalExperience; // Met à jour XP
 
       ameliorations = ameliorations.map((amelioration) {
         if (amelioration.id == upgradeId) {
@@ -209,11 +213,11 @@ class _GameViewState extends State<GameView>
 
       // 🔥 Si l'upgrade est l'auto-clicker, on active le bot
       if (upgradeId == 2) {
-        _nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
+        GameView.nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
         _startAutoClicker();
       }
       else if (upgradeId == 1) {
-        _nbrDegatsParClick = pow(2, ameliorations[0].level).toInt();
+        GameView.nbrDegatsParClick = pow(2, ameliorations[0].level).toInt();
       }
     });
   } catch (e) {
@@ -225,12 +229,12 @@ void _startAutoClicker() {
   if (_isAutoClickerActive) return; // Si déjà actif, on ne le relance pas
 
   _isAutoClickerActive = true;
-  print("AutoClicker activé : $_nbrDegatsAutoClicker clics/sec");
+  print("AutoClicker activé : $GameView.nbrDegatsAutoClicker clics/sec");
 
   _autoClickerTimer?.cancel(); // Annule l'ancien timer s'il existe
 
   // 🔥 Crée un timer qui clique X fois par seconde
-  _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / _nbrDegatsAutoClicker).round()), (timer) {
+  _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / GameView.nbrDegatsAutoClicker).round()), (timer) {
     setState(() {
       _decrementCounterAutoclicker();
     });
@@ -254,7 +258,7 @@ void _startAutoClicker() {
   void _decrementCounter() async {
     if (_nbrVieRestant > 0) {
       setState(() {
-        _nbrVieRestant-=_nbrDegatsParClick;
+        _nbrVieRestant-=GameView.nbrDegatsParClick;
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
@@ -263,7 +267,7 @@ void _startAutoClicker() {
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
       await userViewModel.updateUserTotalExperience(
-          widget.userId, _totalExperience + 1);
+          widget.userId, GameView.totalExperience + 1);
 
       if (_nbrVieRestant <= 0) {
         _levelUp();
@@ -275,7 +279,7 @@ void _startAutoClicker() {
   void _decrementCounterAutoclicker() async {
     if (_nbrVieRestant > 0) {
       setState(() {
-        _nbrVieRestant-=_nbrDegatsAutoClicker;
+        _nbrVieRestant-=GameView.nbrDegatsAutoClicker;
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
@@ -284,7 +288,7 @@ void _startAutoClicker() {
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
       await userViewModel.updateUserTotalExperience(
-          widget.userId, _totalExperience + 1);
+          widget.userId, GameView.totalExperience + 1);
 
       if (_nbrVieRestant <= 0) {
         _levelUp();
@@ -296,9 +300,9 @@ void _startAutoClicker() {
 
   void _levelUp() async {
     setState(() {
-      _totalExperience += (_gainExp * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
+      GameView.totalExperience += (GameView.gainExp * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
       if (_user.id_ennemy%4==0){
-        _gainExp = ((_gainExp + _user.id_ennemy )*2.7).round();
+        GameView.gainExp = ((GameView.gainExp + _user.id_ennemy )*2.7).round();
       }
       if (_user.nbr_mort_dern_ennemi >= 10 || _user.id_ennemy%5==0) {
         _user = UserModel(
@@ -471,7 +475,7 @@ void _startAutoClicker() {
                         Column(
                           children: [
                             Text(
-                              'Expérience : $_totalExperience',
+                              'Expérience : ${GameView.totalExperience}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
