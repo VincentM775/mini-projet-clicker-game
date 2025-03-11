@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -31,6 +32,9 @@ class _GameViewState extends State<GameView>
   int _totalExperience = 0;
   int _nbrVieRestant = 0;
   int _nbrDegatsParClick = 1;
+  int _nbrDegatsAutoClicker=0;
+  Timer? _autoClickerTimer;
+  bool _isAutoClickerActive = false;
 
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -38,8 +42,7 @@ class _GameViewState extends State<GameView>
       1.0; // Représente le pourcentage de vie restant (1.0 = 100%)
   int _totalLife = 1; // Vie maximale de l'ennemi
 
-  bool _isShowUpgradePanel =
-      false; // 👈 Booléen pour gérer l'affichage de la section
+  bool _isShowUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
   bool _isShowShopPanel = false; // 👈 Booléen pour afficher le Shop
 
   List<UpgradeModel> ameliorations = []; // Liste des améliorations
@@ -55,7 +58,7 @@ class _GameViewState extends State<GameView>
       upperBound: 1.0,
     );
 
-    _scaleAnimation = _controller.drive(CurveTween(curve: Curves.easeOut));
+    _scaleAnimation = _controller.drive(CurveTween(curve: Curves.easeInSine));
     _user = UserModel(
       id: 0,
       pseudo: 'Inconnu',
@@ -64,6 +67,22 @@ class _GameViewState extends State<GameView>
       nbr_mort_dern_ennemi: 0,
     );
     _loadUserData();
+  }
+
+  Future<void> _loadAutoClicke() async {
+    final upgradeService = UpgradeService();
+
+    final ameliorationList = await upgradeService.getUpgrades(_user.id);
+    print("lalala : ${ameliorationList[1].level }");
+    if(ameliorationList[1].level >=1) {
+      ameliorations = ameliorationList;
+      _nbrDegatsAutoClicker = pow(2, ameliorations[1].level-1).toInt();
+      _startAutoClicker();
+      print("AUTOCLICKER COMMENCER nouvelle valeur de nbrdegatparclick : ${_nbrDegatsAutoClicker}");
+
+    }else{
+      print("je ne rentre pas la");
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -110,11 +129,14 @@ class _GameViewState extends State<GameView>
       final ameliorationList = await upgradeService.getUpgrades(_user.id);
       setState(() {
         ameliorations = ameliorationList;
+        _nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
       });
-      _nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
+      print("nouvelle valeur de nbrdegatparclick : ${_nbrDegatsParClick}");
     } catch (e) {
       print("Erreur lors du chargement des améliorations: $e");
     }
+    _loadAutoClicke();
+
   }
 
   void _showShopPanel() async {
@@ -161,33 +183,65 @@ class _GameViewState extends State<GameView>
   // }
 
   void _applyUpgrade(int upgradeId) async {
-    final upgradeService = UpgradeService();
-    try {
-      final result = await upgradeService.applyUpgrade(_user.id, upgradeId);
-      if (result.containsKey('error')) {
-        print(result['error']);
-        return;
-      }
-
-      print("Résultat après amélioration: $result"); // 🔍 Debug
-
-      setState(() {
-        _totalExperience =
-            result['new_xp'] ?? _totalExperience; // Évite le `null`
-
-        for (var amelioration in ameliorations) {
-          if (amelioration.id == upgradeId) {
-            amelioration.level =
-                (amelioration.level + 1); // Ajout d'un fallback
-            amelioration.costActual =
-                (amelioration.cost * pow(2.1, amelioration.level)).round();
-          }
-        }
-      });
-
-    } catch (e) {
-      print("Erreur lors de l'amélioration: $e");
+  final upgradeService = UpgradeService();
+  try {
+    final result = await upgradeService.applyUpgrade(_user.id, upgradeId);
+    if (result.containsKey('error')) {
+      print(result['error']);
+      return;
     }
+
+    print("Résultat après amélioration: $result"); // 🔍 Debug
+
+    setState(() {
+      _totalExperience = result['new_xp'] ?? _totalExperience; // Met à jour XP
+
+      ameliorations = ameliorations.map((amelioration) {
+        if (amelioration.id == upgradeId) {
+          return amelioration.copyWith(
+            level: amelioration.level + 1,
+            costActual: (amelioration.cost * pow(2.1, amelioration.level + 1)).round(),
+          );
+        }
+        return amelioration;
+      }).toList();
+
+      // 🔥 Si l'upgrade est l'auto-clicker, on active le bot
+      if (upgradeId == 2) {
+        _nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
+        _startAutoClicker();
+      }
+      else if (upgradeId == 1) {
+        _nbrDegatsParClick = pow(2, ameliorations[0].level).toInt();
+      }
+    });
+  } catch (e) {
+    print("Erreur lors de l'amélioration: $e");
+  }
+}
+
+void _startAutoClicker() {
+  if (_isAutoClickerActive) return; // Si déjà actif, on ne le relance pas
+
+  _isAutoClickerActive = true;
+  print("AutoClicker activé : $_nbrDegatsAutoClicker clics/sec");
+
+  _autoClickerTimer?.cancel(); // Annule l'ancien timer s'il existe
+
+  // 🔥 Crée un timer qui clique X fois par seconde
+  _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / _nbrDegatsAutoClicker).round()), (timer) {
+    setState(() {
+      _decrementCounterAutoclicker();
+    });
+
+    print("Auto-click effectué ! vie restant a l'ennemi: $_nbrVieRestant");
+  });
+}
+
+  void _stopAutoClicker() {
+    _autoClickerTimer?.cancel();
+    _isAutoClickerActive = false;
+    print("AutoClicker désactivé !");
   }
 
   @override
@@ -217,13 +271,33 @@ class _GameViewState extends State<GameView>
       _controller.forward(from: 0.9);
     }
   }
+  void _decrementCounterAutoclicker() async {
+    if (_nbrVieRestant > 0) {
+      setState(() {
+        _nbrVieRestant-=_nbrDegatsAutoClicker;
+        if (_nbrVieRestant <0){
+          _nbrVieRestant = 0;
+        }
+        _currentLife = _nbrVieRestant / _totalLife; // Met à jour la barre de vie
+      });
+
+      final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+      await userViewModel.updateUserTotalExperience(
+          widget.userId, _totalExperience + 1);
+
+      if (_nbrVieRestant <= 0) {
+        _levelUp();
+      }
+
+      _controller.forward(from: 0.9);
+    }
+  }
 
   void _levelUp() async {
     setState(() {
-      _totalExperience +=
-          1 * _user.id_ennemy; // Ajoute de l'expérience en montant de niveau
+      _totalExperience += (2 * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
 
-      if (_user.nbr_mort_dern_ennemi >= 10) {
+      if (_user.nbr_mort_dern_ennemi >= 10 || _user.id_ennemy%5==0) {
         _user = UserModel(
           id: _user.id,
           pseudo: _user.pseudo,
@@ -306,7 +380,6 @@ class _GameViewState extends State<GameView>
       );
   }
 
-
   Widget _buildShopPanel() {
     return shopItems.isEmpty
         ? const Center(child: CircularProgressIndicator())
@@ -336,8 +409,6 @@ class _GameViewState extends State<GameView>
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -348,7 +419,10 @@ class _GameViewState extends State<GameView>
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            _stopAutoClicker(); // 🔥 Arrête l'auto-clicker avant de quitter
+            Navigator.pop(context);
+          },
           color: Colors.white,
           iconSize: 30,
           alignment: Alignment.centerLeft,
@@ -490,7 +564,6 @@ class _GameViewState extends State<GameView>
                           style: const TextStyle(
                               fontSize: 32, fontWeight: FontWeight.bold),
                         ),
-
                         Text(
                           'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
                           style: const TextStyle(
