@@ -43,7 +43,7 @@ try {
             }
 
             // Mise à jour de l'expérience de l'utilisateur
-            $query = "UPDATE users SET total_experience = total_experience + :xp WHERE id = :user_id";
+            $query = "UPDATE player SET total_experience = total_experience + :xp WHERE id = :user_id";
             $stmt = $db->prepare($query);
             $stmt->execute([
                 ':xp' => filter_var($data['xp'], FILTER_VALIDATE_INT),

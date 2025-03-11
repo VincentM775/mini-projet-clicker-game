@@ -58,12 +58,19 @@ class ShopService {
     } catch (e) {
       print("Erreur lors de la demande à l'API: $e");
     }
+
+    // Supprimer l'item après utilisation
+    await _apiService.postRequest('post_user_shop_item.php', {
+      'action': 'remove_item',  // Action pour l'insertion dans la table user_shop_item
+      'user_id': userId,        // ID de l'utilisateur
+      'shop_item_id': itemId,
+    });
   }
 
   // Fonction pour appliquer les effets de l'item acheté (par exemple, un boost d'XP)
   Future<int> applyItemEffects(int userId, int itemId) async {
     // Récupérer l'XP actuel de l'utilisateur
-    final userResponse = await _apiService.postRequest('post_user_xp.php', {'user_id': userId});
+    final userResponse = await _apiService.postRequest('get_user_xp.php', {'user_id': userId});
 
     // Vérifie si la réponse contient bien 'total_experience'
     int currentXp = 0;
@@ -124,13 +131,6 @@ class ShopService {
       default:
         break;
     }
-
-    // Supprimer l'item après utilisation
-    await _apiService.postRequest('post_user_shop_item.php', {
-      'action': 'remove_item',  // Action pour l'insertion dans la table user_shop_item
-      'user_id': userId,        // ID de l'utilisateur
-      'shop_item_id': itemId,
-    });
 
     // Appliquer les effets dans les autres actions du jeu, par exemple lors du clic ou du gain d'XP
     // Exemple de l'XP calculée : si l'XP est augmenté, applique les bonus
