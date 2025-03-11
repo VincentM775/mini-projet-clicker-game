@@ -37,6 +37,8 @@ class _HomeViewState extends State<HomeView> {
         title: const Text('Utilisateurs'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
+      backgroundColor: Colors.purpleAccent[50], // Définir la couleur de fond ici
+
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Consumer<UserViewModel>(
