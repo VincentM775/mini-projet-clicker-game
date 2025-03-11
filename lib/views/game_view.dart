@@ -33,6 +33,7 @@ class _GameViewState extends State<GameView>
   int _nbrVieRestant = 0;
   int _nbrDegatsParClick = 1;
   int _nbrDegatsAutoClicker=0;
+  int _gainExp = 1;
   Timer? _autoClickerTimer;
   bool _isAutoClickerActive = false;
 
@@ -295,8 +296,10 @@ void _startAutoClicker() {
 
   void _levelUp() async {
     setState(() {
-      _totalExperience += (2 * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
-
+      _totalExperience += (_gainExp * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
+      if (_user.id_ennemy%4==0){
+        _gainExp = ((_gainExp + _user.id_ennemy )*2.7).round();
+      }
       if (_user.nbr_mort_dern_ennemi >= 10 || _user.id_ennemy%5==0) {
         _user = UserModel(
           id: _user.id,
