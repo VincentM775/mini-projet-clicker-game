@@ -47,8 +47,8 @@ class _GameViewState extends State<GameView>
       1.0; // Représente le pourcentage de vie restant (1.0 = 100%)
   int _totalLife = 1; // Vie maximale de l'ennemi
 
-  bool _isShowUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
-  bool _isShowShopPanel = false; // 👈 Booléen pour afficher le Shop
+  bool _isShowUpgradePanel = false;
+  bool _isShowShopPanel = false;
 
   List<UpgradeModel> ameliorations = []; // Liste des améliorations
   List<ShopItemModel> shopItems = []; // Liste des items du shop
@@ -467,7 +467,14 @@ void _startAutoClicker() {
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Colors.white),
+                                  color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2), // Décalage du shadow
+                                    blurRadius: 3, // Flou pour adoucir le contour
+                                    color: Colors.black, // Couleur du contour
+                                  ),
+                                ],),
                             ),
                           ],
                         ),
@@ -479,7 +486,14 @@ void _startAutoClicker() {
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Colors.white),
+                                  color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2), // Décalage du shadow
+                                    blurRadius: 3, // Flou pour adoucir le contour
+                                    color: Colors.black, // Couleur du contour
+                                  ),
+                                ],),
                             ),
                           ],
                         ),
@@ -569,19 +583,33 @@ void _startAutoClicker() {
                         Text(
                           'Niveau ${_user.id_ennemy} : ${_enemy?.name}',
                           style: const TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
+                              fontSize: 32, fontWeight: FontWeight.bold , color: Colors.white ,shadows: [
+                            Shadow(
+                              offset: Offset(2, 2), // Décalage du shadow
+                              blurRadius: 3, // Flou pour adoucir le contour
+                              color: Colors.black, // Couleur du contour
+
+                            ),
+                          ],),
                         ),
                         Text(
                           'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, shadows: [
+                            Shadow(
+                              offset: Offset(2, 2), // Décalage du shadow
+                              blurRadius: 3, // Flou pour adoucir le contour
+                              color: Colors.black, // Couleur du contour
+                            ),
+                          ],),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: 10.0, horizontal: 20.0),
                           child: Stack(
                             alignment: Alignment
-                                .center, // Centre le texte sur la barre
+                                .center,
+                            // Centre le texte sur la barre
                             children: [
                               SizedBox(
                                 height:
@@ -603,7 +631,15 @@ void _startAutoClicker() {
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors
-                                      .white, // Assure une bonne visibilité
+                                      .white,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(2, 2), // Décalage du shadow
+                                      blurRadius: 3, // Flou pour adoucir le contour
+                                      color: Colors.black, // Couleur du contour
+                                    ),
+                                  ],
+                                  // Assure une bonne visibilité
                                 ),
                               ),
                             ],

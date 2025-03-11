@@ -120,11 +120,8 @@ class ShopService {
         break;
     }
 
-    // Appliquer les effets dans les autres actions du jeu, par exemple lors du clic ou du gain d'XP
-    // Exemple de l'XP calculée : si l'XP est augmenté, applique les bonus
     currentXp += (xpBonus * xpMultiplier).toInt();
 
-    // Retourner l'XP mis à jour
     return currentXp;
   }
 }

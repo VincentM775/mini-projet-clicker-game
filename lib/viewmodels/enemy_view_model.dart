@@ -35,7 +35,7 @@ class EnemyViewModel extends ChangeNotifier {
     try {
       EnemyModel? enemy = await _enemyService.getEnemyByLevel(level);
       if (enemy != null) {
-        _enemies = [enemy]; // Met à jour avec un seul ennemi
+        _enemies = [enemy];
       } else {
         _enemies = [];
       }

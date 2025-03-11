@@ -33,7 +33,7 @@ class UsersTable extends StatelessWidget {
       columns: const [
         DataColumn(label: Text("Pseudo")),
         DataColumn(label: Text("Total expérience")),
-        DataColumn(label: Text("dernier ennemi")),
+        DataColumn(label: Text("Dernier niveau")),
         DataColumn(label: Text("Actions")),
         DataColumn(label: Text("")),
 
