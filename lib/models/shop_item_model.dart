@@ -2,7 +2,7 @@ class ShopItemModel {
   final int id;
   final String name;
   final String description;
-  final int price; // Le prix de l'objet en monnaie (par exemple, pièces, gemmes, etc.)
+  final int price;
   final int temps;
 
   ShopItemModel({
@@ -13,7 +13,6 @@ class ShopItemModel {
     required this.temps,
   });
 
-  // Méthode de désérialisation pour convertir un JSON en un objet ShopItemModel
   factory ShopItemModel.fromJson(Map<String, dynamic> json) {
     return ShopItemModel(
       id: json['id'],
@@ -24,7 +23,6 @@ class ShopItemModel {
     );
   }
 
-  // Méthode de sérialisation pour convertir un objet ShopItemModel en JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,

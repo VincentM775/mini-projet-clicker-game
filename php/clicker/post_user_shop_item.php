@@ -42,27 +42,27 @@ try {
             }
 
             // Insertion de l'objet dans la table user_shop_item (relation entre l'utilisateur et l'item)
-            $query = "INSERT INTO user_shop_items (user_id, shop_item_id) VALUES (:user_id, :shop_item_id)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                ':user_id' => filter_var($data['user_id'], FILTER_VALIDATE_INT),
-                ':shop_item_id' => filter_var($data['shop_item_id'], FILTER_VALIDATE_INT),
-            ]);
+//             $query = "INSERT INTO user_shop_items (user_id, shop_item_id) VALUES (:user_id, :shop_item_id)";
+//             $stmt = $db->prepare($query);
+//             $stmt->execute([
+//                 ':user_id' => filter_var($data['user_id'], FILTER_VALIDATE_INT),
+//                 ':shop_item_id' => filter_var($data['shop_item_id'], FILTER_VALIDATE_INT),
+//             ]);
 
             $response = ["success" => "Objet ajouté à l'utilisateur", "id" => $db->lastInsertId()];
             break;
 
         case "remove_item":
-                    // Vérifier que les données nécessaires sont présentes
-                    if (!isset($data['user_id']) || !isset($data['item_id'])) {
-                        throw new Exception("Données insuffisantes pour l'utilisation de l'item");
-                    }
+            // Vérifier que les données nécessaires sont présentes
+            if (!isset($data['user_id']) || !isset($data['item_id'])) {
+                throw new Exception("Données insuffisantes pour l'utilisation de l'item");
+            }
 
-                    $user_id = filter_var($data['user_id'], FILTER_VALIDATE_INT);
-                    $item_id = filter_var($data['item_id'], FILTER_VALIDATE_INT);
+            $user_id = filter_var($data['user_id'], FILTER_VALIDATE_INT);
+            $item_id = filter_var($data['item_id'], FILTER_VALIDATE_INT);
 
-                    // Suppression de l'item dans la table user_shop_item
-                    $query_delete_item = "DELETE FROM user_shop_items WHERE user_id = :user_id AND shop_item_id = :item_id";
+            // Suppression de l'item dans la table user_shop_item
+            $query_delete_item = "DELETE FROM user_shop_items WHERE user_id = :user_id AND shop_item_id = :item_id";
 
         default:
             throw new Exception("Action non reconnue");

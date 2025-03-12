@@ -17,6 +17,14 @@ import '../models/enemy_model.dart';
 
 class GameView extends StatefulWidget {
   final int userId;
+
+  static int nbrDegatsParClick = 1;
+  static int totalExperience = 0;
+  static int gainExp = 1;
+  static int nbrDegatsAutoClicker=0;
+
+
+
   const GameView({super.key, required this.userId});
 
   @override
@@ -29,11 +37,7 @@ class _GameViewState extends State<GameView>
   EnemyModel? _enemy;
   bool _isLoading = true;
 
-  int _totalExperience = 0;
   int _nbrVieRestant = 0;
-  int _nbrDegatsParClick = 1;
-  int _nbrDegatsAutoClicker=0;
-  int _gainExp = 1;
   Timer? _autoClickerTimer;
   bool _isAutoClickerActive = false;
 
@@ -43,8 +47,8 @@ class _GameViewState extends State<GameView>
       1.0; // Représente le pourcentage de vie restant (1.0 = 100%)
   int _totalLife = 1; // Vie maximale de l'ennemi
 
-  bool _isShowUpgradePanel = false; // 👈 Booléen pour gérer l'affichage de la section
-  bool _isShowShopPanel = false; // 👈 Booléen pour afficher le Shop
+  bool _isShowUpgradePanel = false;
+  bool _isShowShopPanel = false;
 
   List<UpgradeModel> ameliorations = []; // Liste des améliorations
   List<ShopItemModel> shopItems = []; // Liste des items du shop
@@ -77,9 +81,9 @@ class _GameViewState extends State<GameView>
     print("lalala : ${ameliorationList[1].level }");
     if(ameliorationList[1].level >=1) {
       ameliorations = ameliorationList;
-      _nbrDegatsAutoClicker = pow(2, ameliorations[1].level-1).toInt();
+      GameView.nbrDegatsAutoClicker = pow(2, ameliorations[1].level-1).toInt();
       _startAutoClicker();
-      print("AUTOCLICKER COMMENCER nouvelle valeur de nbrdegatparclick : ${_nbrDegatsAutoClicker}");
+      print("AUTOCLICKER COMMENCER nouvelle valeur de nbrdegatparclick : ${GameView.nbrDegatsAutoClicker}");
 
     }else{
       print("je ne rentre pas la");
@@ -100,7 +104,7 @@ class _GameViewState extends State<GameView>
             nbr_mort_dern_ennemi: 0,
           );
 
-      _totalExperience = _user.total_experience;
+      GameView.totalExperience = _user.total_experience;
       _loadEnemyData();
       _isLoading = false;
     });
@@ -110,7 +114,7 @@ class _GameViewState extends State<GameView>
     final enemyService = EnemyService();
     try {
       final enemy = await enemyService.getEnemyByLevel(_user.id_ennemy);
-      if (enemy != null) {
+      if (enemy != null && !(_user.id_ennemy == 30 && _user.nbr_mort_dern_ennemi >= 1)) {
         setState(() {
           _enemy = enemy;
           _nbrVieRestant = enemy.totalLife;
@@ -118,7 +122,28 @@ class _GameViewState extends State<GameView>
               enemy.totalLife; // Stocke la vie max pour la barre de vie
           _currentLife = 1.0; // Réinitialisation de la barre de vie
         });
+      }else {
+        showDialog(
+          context: context,
+          barrierDismissible: false, // Empêche de fermer en cliquant à l'extérieur
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Félicitations !"),
+              content: const Text("Le jeu est terminé, bravo !"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Ferme le pop-up
+                    Navigator.of(context).pop(); // Retourne à l'écran précédent
+                  },
+                  child: const Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
       }
+
     } catch (e) {
       print('Erreur lors du chargement de l\'ennemi : $e');
     }
@@ -130,9 +155,9 @@ class _GameViewState extends State<GameView>
       final ameliorationList = await upgradeService.getUpgrades(_user.id);
       setState(() {
         ameliorations = ameliorationList;
-        _nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
+        GameView.nbrDegatsParClick = pow(2,ameliorations[0].level).toInt();
       });
-      print("nouvelle valeur de nbrdegatparclick : ${_nbrDegatsParClick}");
+      print("nouvelle valeur de nbrdegatparclick : ${GameView.nbrDegatsParClick}");
     } catch (e) {
       print("Erreur lors du chargement des améliorations: $e");
     }
@@ -170,19 +195,6 @@ class _GameViewState extends State<GameView>
     }
   }
 
-
-  // void _applyUpgrade(int upgradeId) async {
-  //   final upgradeService = UpgradeService();
-  //   try {
-  //     await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
-  //     setState(() {
-  //       // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
-  //     });
-  //   } catch (e) {
-  //     print("Erreur lors de l'amélioration: $e");
-  //   }
-  // }
-
   void _applyUpgrade(int upgradeId) async {
   final upgradeService = UpgradeService();
   try {
@@ -192,10 +204,10 @@ class _GameViewState extends State<GameView>
       return;
     }
 
-    print("Résultat après amélioration: $result"); // 🔍 Debug
+    print("Résultat après amélioration: $result");
 
     setState(() {
-      _totalExperience = result['new_xp'] ?? _totalExperience; // Met à jour XP
+      GameView.totalExperience = result['new_xp'] ?? GameView.totalExperience;
 
       ameliorations = ameliorations.map((amelioration) {
         if (amelioration.id == upgradeId) {
@@ -207,13 +219,13 @@ class _GameViewState extends State<GameView>
         return amelioration;
       }).toList();
 
-      // 🔥 Si l'upgrade est l'auto-clicker, on active le bot
+
       if (upgradeId == 2) {
-        _nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
+        GameView.nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
         _startAutoClicker();
       }
       else if (upgradeId == 1) {
-        _nbrDegatsParClick = pow(2, ameliorations[0].level).toInt();
+        GameView.nbrDegatsParClick = pow(2, ameliorations[0].level).toInt();
       }
     });
   } catch (e) {
@@ -222,15 +234,14 @@ class _GameViewState extends State<GameView>
 }
 
 void _startAutoClicker() {
-  if (_isAutoClickerActive) return; // Si déjà actif, on ne le relance pas
+  if (_isAutoClickerActive) return;
 
   _isAutoClickerActive = true;
-  print("AutoClicker activé : $_nbrDegatsAutoClicker clics/sec");
+  print("AutoClicker activé : $GameView.nbrDegatsAutoClicker clics/sec");
 
-  _autoClickerTimer?.cancel(); // Annule l'ancien timer s'il existe
+  _autoClickerTimer?.cancel();
 
-  // 🔥 Crée un timer qui clique X fois par seconde
-  _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / _nbrDegatsAutoClicker).round()), (timer) {
+  _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / GameView.nbrDegatsAutoClicker).round()), (timer) {
     setState(() {
       _decrementCounterAutoclicker();
     });
@@ -254,16 +265,16 @@ void _startAutoClicker() {
   void _decrementCounter() async {
     if (_nbrVieRestant > 0) {
       setState(() {
-        _nbrVieRestant-=_nbrDegatsParClick;
+        _nbrVieRestant-=GameView.nbrDegatsParClick;
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
-        _currentLife = _nbrVieRestant / _totalLife; // Met à jour la barre de vie
+        _currentLife = _nbrVieRestant / _totalLife;
       });
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
       await userViewModel.updateUserTotalExperience(
-          widget.userId, _totalExperience + 1);
+          widget.userId, GameView.totalExperience + 1);
 
       if (_nbrVieRestant <= 0) {
         _levelUp();
@@ -275,16 +286,16 @@ void _startAutoClicker() {
   void _decrementCounterAutoclicker() async {
     if (_nbrVieRestant > 0) {
       setState(() {
-        _nbrVieRestant-=_nbrDegatsAutoClicker;
+        _nbrVieRestant-=GameView.nbrDegatsAutoClicker;
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
-        _currentLife = _nbrVieRestant / _totalLife; // Met à jour la barre de vie
+        _currentLife = _nbrVieRestant / _totalLife;
       });
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
       await userViewModel.updateUserTotalExperience(
-          widget.userId, _totalExperience + 1);
+          widget.userId, GameView.totalExperience + 1);
 
       if (_nbrVieRestant <= 0) {
         _levelUp();
@@ -296,9 +307,9 @@ void _startAutoClicker() {
 
   void _levelUp() async {
     setState(() {
-      _totalExperience += (_gainExp * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
+      GameView.totalExperience += (GameView.gainExp * _user.id_ennemy).round(); // Ajoute de l'expérience en montant de niveau
       if (_user.id_ennemy%4==0){
-        _gainExp = ((_gainExp + _user.id_ennemy )*2.7).round();
+        GameView.gainExp = ((GameView.gainExp + _user.id_ennemy )*2.7).round();
       }
       if (_user.nbr_mort_dern_ennemi >= 10 || _user.id_ennemy%5==0) {
         _user = UserModel(
@@ -463,7 +474,14 @@ void _startAutoClicker() {
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Colors.white),
+                                  color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2), // Décalage du shadow
+                                    blurRadius: 3, // Flou pour adoucir le contour
+                                    color: Colors.black, // Couleur du contour
+                                  ),
+                                ],),
                             ),
                           ],
                         ),
@@ -471,11 +489,18 @@ void _startAutoClicker() {
                         Column(
                           children: [
                             Text(
-                              'Expérience : $_totalExperience',
+                              'Expérience : ${GameView.totalExperience}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Colors.white),
+                                  color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2), // Décalage du shadow
+                                    blurRadius: 3, // Flou pour adoucir le contour
+                                    color: Colors.black, // Couleur du contour
+                                  ),
+                                ],),
                             ),
                           ],
                         ),
@@ -565,19 +590,37 @@ void _startAutoClicker() {
                         Text(
                           'Niveau ${_user.id_ennemy} : ${_enemy?.name}',
                           style: const TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
+                              fontSize: 32, fontWeight: FontWeight.bold , color: Colors.white ,shadows: [
+                            Shadow(
+                              offset: Offset(2, 2), // Décalage du shadow
+                              blurRadius: 3, // Flou pour adoucir le contour
+                              color: Colors.black, // Couleur du contour
+
+                            ),
+                          ],),
                         ),
                         Text(
-                          'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
+                          'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/${_user.id_ennemy % 5 == 0 ? 1 : 10}',
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(2, 2), // Décalage du shadow
+                                blurRadius: 3, // Flou pour adoucir le contour
+                                color: Colors.black, // Couleur du contour
+                              ),
+                            ],
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: 10.0, horizontal: 20.0),
                           child: Stack(
                             alignment: Alignment
-                                .center, // Centre le texte sur la barre
+                                .center,
+                            // Centre le texte sur la barre
                             children: [
                               SizedBox(
                                 height:
@@ -599,7 +642,15 @@ void _startAutoClicker() {
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors
-                                      .white, // Assure une bonne visibilité
+                                      .white,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(2, 2), // Décalage du shadow
+                                      blurRadius: 3, // Flou pour adoucir le contour
+                                      color: Colors.black, // Couleur du contour
+                                    ),
+                                  ],
+                                  // Assure une bonne visibilité
                                 ),
                               ),
                             ],

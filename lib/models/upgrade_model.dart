@@ -40,7 +40,6 @@ class UpgradeModel {
     };
   }
 
-  /// 🔹 Ajoute cette méthode pour créer une copie avec des valeurs modifiées
   UpgradeModel copyWith({int? level, int? costActual}) {
     return UpgradeModel(
       id: id,
