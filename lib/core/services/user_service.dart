@@ -111,7 +111,6 @@ class UserRequest {
         "id_player": id.toString(),
         "id_ennemy": newIdEnnemi.toString(),
       });
-
       // Vérifie si la réponse est correcte et affiche un log
       if (response['success'] != null) {
         print("Mise à jour réussie de l'id_ennemy !");
@@ -127,7 +126,8 @@ class UserRequest {
   Future<void> updateNbrMortDernEnnemi(int id, int newNbrMortDernEnnemi) async {
     try {
       // Log de débogage pour suivre les valeurs envoyées
-      print("Mise à jour du nombre de morts du dernier ennemi : $id avec $newNbrMortDernEnnemi");
+      print(
+          "Mise à jour du nombre de morts du dernier ennemi : $id avec $newNbrMortDernEnnemi");
 
       // Envoie la requête à l'API pour mettre à jour nbr_mort_dern_ennemi
       final response = await apiService.postRequest("post_users.php", {
@@ -146,5 +146,4 @@ class UserRequest {
       print("Erreur : $e");
     }
   }
-
 }

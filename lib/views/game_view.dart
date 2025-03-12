@@ -114,7 +114,7 @@ class _GameViewState extends State<GameView>
     final enemyService = EnemyService();
     try {
       final enemy = await enemyService.getEnemyByLevel(_user.id_ennemy);
-      if (enemy != null) {
+      if (enemy != null && !(_user.id_ennemy == 30 && _user.nbr_mort_dern_ennemi >= 1)) {
         setState(() {
           _enemy = enemy;
           _nbrVieRestant = enemy.totalLife;
@@ -122,7 +122,28 @@ class _GameViewState extends State<GameView>
               enemy.totalLife; // Stocke la vie max pour la barre de vie
           _currentLife = 1.0; // Réinitialisation de la barre de vie
         });
+      }else {
+        showDialog(
+          context: context,
+          barrierDismissible: false, // Empêche de fermer en cliquant à l'extérieur
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Félicitations !"),
+              content: const Text("Le jeu est terminé, bravo !"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Ferme le pop-up
+                    Navigator.of(context).pop(); // Retourne à l'écran précédent
+                  },
+                  child: const Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
       }
+
     } catch (e) {
       print('Erreur lors du chargement de l\'ennemi : $e');
     }
@@ -174,19 +195,6 @@ class _GameViewState extends State<GameView>
     }
   }
 
-
-  // void _applyUpgrade(int upgradeId) async {
-  //   final upgradeService = UpgradeService();
-  //   try {
-  //     await upgradeService.applyUpgrade(_user.id, upgradeId);  // Application de l'amélioration
-  //     setState(() {
-  //       // Actualiser l'état, comme l'ajout d'XP ou la mise à jour du niveau
-  //     });
-  //   } catch (e) {
-  //     print("Erreur lors de l'amélioration: $e");
-  //   }
-  // }
-
   void _applyUpgrade(int upgradeId) async {
   final upgradeService = UpgradeService();
   try {
@@ -196,10 +204,10 @@ class _GameViewState extends State<GameView>
       return;
     }
 
-    print("Résultat après amélioration: $result"); // 🔍 Debug
+    print("Résultat après amélioration: $result");
 
     setState(() {
-      GameView.totalExperience = result['new_xp'] ?? GameView.totalExperience; // Met à jour XP
+      GameView.totalExperience = result['new_xp'] ?? GameView.totalExperience;
 
       ameliorations = ameliorations.map((amelioration) {
         if (amelioration.id == upgradeId) {
@@ -211,7 +219,7 @@ class _GameViewState extends State<GameView>
         return amelioration;
       }).toList();
 
-      // 🔥 Si l'upgrade est l'auto-clicker, on active le bot
+
       if (upgradeId == 2) {
         GameView.nbrDegatsAutoClicker = pow(2, ameliorations[1].level - 1).toInt();
         _startAutoClicker();
@@ -226,14 +234,13 @@ class _GameViewState extends State<GameView>
 }
 
 void _startAutoClicker() {
-  if (_isAutoClickerActive) return; // Si déjà actif, on ne le relance pas
+  if (_isAutoClickerActive) return;
 
   _isAutoClickerActive = true;
   print("AutoClicker activé : $GameView.nbrDegatsAutoClicker clics/sec");
 
-  _autoClickerTimer?.cancel(); // Annule l'ancien timer s'il existe
+  _autoClickerTimer?.cancel();
 
-  // 🔥 Crée un timer qui clique X fois par seconde
   _autoClickerTimer = Timer.periodic(Duration(milliseconds: (1000 / GameView.nbrDegatsAutoClicker).round()), (timer) {
     setState(() {
       _decrementCounterAutoclicker();
@@ -262,7 +269,7 @@ void _startAutoClicker() {
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
-        _currentLife = _nbrVieRestant / _totalLife; // Met à jour la barre de vie
+        _currentLife = _nbrVieRestant / _totalLife;
       });
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
@@ -283,7 +290,7 @@ void _startAutoClicker() {
         if (_nbrVieRestant <0){
           _nbrVieRestant = 0;
         }
-        _currentLife = _nbrVieRestant / _totalLife; // Met à jour la barre de vie
+        _currentLife = _nbrVieRestant / _totalLife;
       });
 
       final userViewModel = Provider.of<UserViewModel>(context, listen: false);
@@ -593,15 +600,19 @@ void _startAutoClicker() {
                           ],),
                         ),
                         Text(
-                          'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/10',
+                          'Nombre de mort avant prochain niveau : ${_user.nbr_mort_dern_ennemi}/${_user.id_ennemy % 5 == 0 ? 1 : 10}',
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, shadows: [
-                            Shadow(
-                              offset: Offset(2, 2), // Décalage du shadow
-                              blurRadius: 3, // Flou pour adoucir le contour
-                              color: Colors.black, // Couleur du contour
-                            ),
-                          ],),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(2, 2), // Décalage du shadow
+                                blurRadius: 3, // Flou pour adoucir le contour
+                                color: Colors.black, // Couleur du contour
+                              ),
+                            ],
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
